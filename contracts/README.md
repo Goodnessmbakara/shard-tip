@@ -2,6 +2,19 @@
 
 Smart contracts for the ShardTip decentralized micro-tipping platform on Shardeum.
 
+## 🌐 Project Links
+
+- **🚀 Live Application**: [https://shard-tip.vercel.app/](https://shard-tip.vercel.app/)
+- **📂 Open Source Code**: [https://github.com/Goodnessmbakara/shard-tip](https://github.com/Goodnessmbakara/shard-tip)
+- **🎥 Demo Video**: [https://youtu.be/bHx0a72eYLE](https://youtu.be/bHx0a72eYLE)
+- **📚 API Documentation**: [API Documentation](../docs/API.md)
+
+## Deployed Contract
+
+**Network**: Shardeum Unstablenet (Chain ID: 8080)  
+**Contract Address**: `0xA61BBB8C3FE06D39E52c2CbC22190Ddb344d86D9`  
+**Explorer**: [https://explorer.shardeum.org/address/0xA61BBB8C3FE06D39E52c2CbC22190Ddb344d86D9](https://explorer.shardeum.org/address/0xA61BBB8C3FE06D39E52c2CbC22190Ddb344d86D9)
+
 ## Contract Features
 
 - **Secure Tipping**: Send SHM tips to creator addresses with reentrancy protection
@@ -13,26 +26,26 @@ Smart contracts for the ShardTip decentralized micro-tipping platform on Shardeu
 ## Setup
 
 1. Install dependencies:
-\`\`\`bash
+```bash
 cd contracts
 npm install
-\`\`\`
+```
 
 2. Create environment file:
-\`\`\`bash
+```bash
 cp .env.example .env
 # Add your private key to .env
-\`\`\`
+```
 
 3. Compile contracts:
-\`\`\`bash
+```bash
 npm run compile
-\`\`\`
+```
 
 4. Run tests:
-\`\`\`bash
+```bash
 npm run test
-\`\`\`
+```
 
 ## Deployment
 
@@ -42,15 +55,15 @@ npm run test
 2. Set your private key in `.env`
 3. Deploy:
 
-\`\`\`bash
+```bash
 npm run deploy
-\`\`\`
+```
 
 The deployment script will output the contract address. Add this to your frontend `.env.local`:
 
-\`\`\`
+```
 NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS=<deployed_contract_address>
-\`\`\`
+```
 
 ### Using Remix IDE
 
@@ -95,9 +108,9 @@ NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS=<deployed_contract_address>
 
 Run the test suite:
 
-\`\`\`bash
+```bash
 npm run test
-\`\`\`
+```
 
 Tests cover:
 - Basic tipping functionality
@@ -110,6 +123,44 @@ Tests cover:
 
 After deployment, verify the contract on Shardeum explorer (if supported):
 
-\`\`\`bash
+```bash
 npm run verify <CONTRACT_ADDRESS>
-\`\`\`
+```
+
+## Contract ABI
+
+The contract ABI is available in the compiled artifacts and can be used for frontend integration:
+
+```json
+[
+  {
+    "inputs": [{"name": "creator", "type": "address"}],
+    "name": "tip",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimTips",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "creator", "type": "address"}],
+    "name": "getPendingTips",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
+```
+
+## Events
+
+The contract emits the following events:
+
+- `TipSent(address indexed tipper, address indexed creator, uint256 amount, uint256 timestamp)`
+- `TipsClaimed(address indexed creator, uint256 amount, uint256 timestamp)`
+- `PlatformFeeUpdated(uint256 newFee)`
