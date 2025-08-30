@@ -15,8 +15,8 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Send, Sparkles, AlertCircle, Brain, TrendingUp, ExternalLink } from "lucide-react"
-import { getEnhancedTipSuggestion } from "@/lib/ai-sentiment"
+import { Loader2, Send, Sparkles, AlertCircle, ExternalLink } from "lucide-react"
+
 
 // Contract address from environment
 const SHARDTIP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS || "0xA61BBB8C3FE06D39E52c2CbC22190Ddb344d86D9"
@@ -36,12 +36,7 @@ export function TipForm() {
   const [creatorAddress, setCreatorAddress] = useState("")
   const [content, setContent] = useState("")
   const [tipAmount, setTipAmount] = useState([0.001])
-  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
-  const [aiSuggestion, setAiSuggestion] = useState<{
-    amount: number
-    confidence: number
-    reasoning: string
-  } | null>(null)
+
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [transactionHash, setTransactionHash] = useState<string | null>(null)
@@ -56,26 +51,7 @@ export function TipForm() {
     hash,
   })
 
-  const handleGetSuggestion = async () => {
-    if (!content.trim()) {
-      setError("Please enter some content to analyze")
-      return
-    }
 
-    setIsLoadingSuggestion(true)
-    setError("")
-    setAiSuggestion(null)
-
-    try {
-      const suggestion = await getEnhancedTipSuggestion(content)
-      setAiSuggestion(suggestion)
-      setTipAmount([suggestion.amount])
-    } catch (err) {
-      setError("Failed to get AI suggestion. Please try again.")
-    } finally {
-      setIsLoadingSuggestion(false)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -143,7 +119,6 @@ export function TipForm() {
     setCreatorAddress("")
     setContent("")
     setTipAmount([0.001])
-    setAiSuggestion(null)
   }
 
   return (
@@ -170,59 +145,26 @@ export function TipForm() {
             />
           </div>
 
-          {/* Content for AI Analysis */}
+          {/* Content for Tip Message */}
           <div className="space-y-2">
-            <Label htmlFor="content">Content (Optional)</Label>
+            <Label htmlFor="content">Message (Optional)</Label>
             <Textarea
               id="content"
-              placeholder="Paste content here for AI-powered tip suggestions..."
+              placeholder="Add a personal message with your tip..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={4}
             />
-            <div className="flex items-center justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleGetSuggestion}
-                disabled={!content.trim() || isLoadingSuggestion}
-                className="flex items-center space-x-2 bg-transparent"
-              >
-                {isLoadingSuggestion ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
-                <span>Get AI Suggestion</span>
-              </Button>
-              {content.trim() && (
+            {content.trim() && (
+              <div className="flex justify-end">
                 <Badge variant="secondary" className="text-xs">
                   {content.trim().split(/\s+/).length} words
                 </Badge>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {aiSuggestion && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-lg p-4"
-            >
-              <div className="flex items-start space-x-3">
-                <Sparkles className="w-5 h-5 text-primary mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="font-semibold text-foreground">AI Suggestion:</span>
-                    <Badge variant="outline" className="text-xs">
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      {Math.round(aiSuggestion.confidence * 100)}% confidence
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">{aiSuggestion.reasoning}</p>
-                  <div className="text-lg font-bold text-primary">{aiSuggestion.amount} SHM</div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+
 
           {/* Tip Amount */}
           <div className="space-y-4">
