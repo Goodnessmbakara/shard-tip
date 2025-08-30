@@ -17,7 +17,7 @@ const SHARDTIP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDR
 
 const SHARDTIP_ABI = [
   {
-    inputs: [],
+    inputs: [{ name: "creator", type: "address" }],
     name: "getPendingTips",
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
@@ -49,12 +49,12 @@ export function ClaimCard() {
   const [lastClaimTime, setLastClaimTime] = useState<Date | null>(null)
   const [transactionHash, setTransactionHash] = useState<string | null>(null)
 
-  // Read pending tips
+  // Read pending tips for the currently connected user
   const { data: pendingTips, refetch: refetchPending } = useReadContract({
     address: SHARDTIP_CONTRACT_ADDRESS,
     abi: SHARDTIP_ABI,
     functionName: "getPendingTips",
-    args: [],
+    args: address ? [address] : undefined,
   })
 
   // Read creator stats
