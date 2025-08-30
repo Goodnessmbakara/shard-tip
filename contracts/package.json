@@ -1,0 +1,18 @@
+{
+  "name": "shardtip-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for ShardTip platform",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network shardeum",
+    "verify": "hardhat verify --network shardeum",
+    "test": "hardhat test",
+    "node": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.3.1"
+  }
+}
