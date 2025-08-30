@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
+import { useRouter } from "next/navigation"
 import { ShardLogo } from "@/components/shard-logo"
 import { NetworkStats } from "@/components/network-stats"
 import { NetworkStatsFooter } from "@/components/network-stats-footer"
@@ -9,6 +10,8 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { ArrowRight, Sparkles, Coins, Heart, Zap, Shield, Users, Star, TrendingUp, Globe } from "lucide-react"
 
 export default function HomePage() {
+  const router = useRouter()
+  
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -96,6 +99,23 @@ export default function HomePage() {
                     const ready = mounted
                     const connected = ready && account && chain
 
+                    if (connected) {
+                      return (
+                        <button
+                          onClick={() => router.push('/dashboard')}
+                          className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 overflow-hidden"
+                        >
+                          <motion.div
+                            animate={{ x: [0, 100, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          />
+                          <span className="relative z-10">Go to Dashboard</span>
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                        </button>
+                      )
+                    }
+
                     return (
                       <button
                         onClick={openConnectModal}
@@ -114,7 +134,13 @@ export default function HomePage() {
                   }}
                 </ConnectButton.Custom>
 
-                <button className="group text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 px-6 py-3 font-semibold flex items-center space-x-2">
+                <button 
+                  onClick={() => {
+                    const featuresSection = document.getElementById('features')
+                    featuresSection?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="group text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 px-6 py-3 font-semibold flex items-center space-x-2"
+                >
                   <span>See How It Works</span>
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
@@ -205,7 +231,7 @@ export default function HomePage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24">
+        <section id="features" className="py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
