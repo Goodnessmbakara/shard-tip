@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Send, Sparkles, AlertCircle, Brain, TrendingUp, ExternalLink } from "lucide-react"
 import { getEnhancedTipSuggestion } from "@/lib/ai-sentiment"
 
-// Mock contract address - replace with actual deployed contract
-const SHARDTIP_CONTRACT_ADDRESS = "0x2e678D2Aa70A28B78b3f62316d565c7718798a6B"
+// Contract address from environment
+const SHARDTIP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS || "0xA61BBB8C3FE06D39E52c2CbC22190Ddb344d86D9"
 
 const SHARDTIP_ABI = [
   {

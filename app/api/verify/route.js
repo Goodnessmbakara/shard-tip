@@ -31,10 +31,12 @@ export async function GET(request) {
   const wallet = searchParams.get('wallet');
 
   try {
-    const wallet = searchParams.get('wallet');
 
     // Validate wallet address
-    if (!wallet || !ethers.isAddress(wallet)) {
+    const addressRegex = /^0x[a-fA-F0-9]{40}$/;
+    const isValidAddress = addressRegex.test(wallet);
+    
+    if (!wallet || !isValidAddress) {
       return Response.json({
         error: 'Invalid wallet address provided',
         status: 'fail',
