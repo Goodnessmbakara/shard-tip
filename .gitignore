@@ -55,3 +55,15 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Development scripts
+scripts/test-integration.js
+scripts/update-contract-address.js
+
+# Placeholder images
+public/placeholder-*.png
+public/placeholder-*.svg
+public/placeholder-*.jpg
+public/placeholder-*.jpeg
+public/placeholder-*.gif
+public/placeholder-*.webp
