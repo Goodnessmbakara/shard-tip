@@ -10,14 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Loader2, Wallet, AlertCircle, CheckCircle, TrendingUp, Users, Clock } from "lucide-react"
+import { Loader2, Wallet, AlertCircle, CheckCircle, TrendingUp, Users, Clock, ExternalLink } from "lucide-react"
 
-// Mock contract address - replace with actual deployed contract
-const SHARDTIP_CONTRACT_ADDRESS = "0x2e678D2Aa70A28B78b3f62316d565c7718798a6B"
+// Contract address from environment
+const SHARDTIP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS || "0xA61BBB8C3FE06D39E52c2CbC22190Ddb344d86D9"
 
 const SHARDTIP_ABI = [
   {
-    inputs: [{ name: "creator", type: "address" }],
+    inputs: [],
     name: "getPendingTips",
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
@@ -47,13 +47,14 @@ export function ClaimCard() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [lastClaimTime, setLastClaimTime] = useState<Date | null>(null)
+  const [transactionHash, setTransactionHash] = useState<string | null>(null)
 
   // Read pending tips
   const { data: pendingTips, refetch: refetchPending } = useReadContract({
     address: SHARDTIP_CONTRACT_ADDRESS,
     abi: SHARDTIP_ABI,
     functionName: "getPendingTips",
-    args: address ? [address] : undefined,
+    args: [],
   })
 
   // Read creator stats
@@ -73,6 +74,7 @@ export function ClaimCard() {
   const handleClaim = async () => {
     setError("")
     setSuccess("")
+    setTransactionHash(null)
 
     if (!pendingTips || pendingTips === 0n) {
       setError("No tips to claim")
@@ -96,6 +98,7 @@ export function ClaimCard() {
       const amount = pendingTips ? formatEther(pendingTips) : "0"
       setSuccess(`Successfully claimed ${amount} SHM!`)
       setLastClaimTime(new Date())
+      setTransactionHash(hash || null)
 
       confetti({
         particleCount: 200,
@@ -111,7 +114,7 @@ export function ClaimCard() {
       refetchPending()
       refetchStats()
     }
-  }, [isConfirmed, success, pendingTips, refetchPending, refetchStats])
+  }, [isConfirmed, success, pendingTips, refetchPending, refetchStats, hash])
 
   const pendingAmount = pendingTips ? formatEther(pendingTips) : "0"
   const totalReceived = creatorStats ? formatEther(creatorStats[1]) : "0"
@@ -174,6 +177,28 @@ export function ClaimCard() {
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
+            </motion.div>
+          )}
+
+          {/* Transaction Hash */}
+          {transactionHash && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="text-xs text-muted-foreground mb-1">Transaction Hash:</div>
+              <a
+                href={`https://explorer.shardeum.org/tx/${transactionHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1 font-mono text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer bg-primary/5 hover:bg-primary/10 px-2 py-1 rounded border border-primary/20 hover:border-primary/30"
+              >
+                <span>{transactionHash.slice(0, 8)}...{transactionHash.slice(-6)}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <div className="text-xs text-muted-foreground mt-1">Click to view on Shardeum Explorer</div>
             </motion.div>
           )}
 
