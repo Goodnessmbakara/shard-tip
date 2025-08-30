@@ -2,9 +2,10 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { Providers } from "@/components/providers"
+import { ProvidersWrapper } from "@/components/providers-wrapper"
 import "./globals.css"
 import { Suspense } from "react"
+import "@/lib/polyfills"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,10 +28,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${inter.variable} antialiased`}>
         <Suspense fallback={null}>
-          <Providers>
+          <ProvidersWrapper>
             {children}
             <Analytics />
-          </Providers>
+          </ProvidersWrapper>
         </Suspense>
       </body>
     </html>

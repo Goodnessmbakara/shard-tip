@@ -18,7 +18,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <ShardLogo className="w-8 h-8" />
+                <ShardLogo className="w-8 h-8" />
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}

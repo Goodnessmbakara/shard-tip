@@ -10,7 +10,7 @@ import "@rainbow-me/rainbowkit/styles.css"
 
 const config = getDefaultConfig({
   appName: "ShardTip",
-  projectId: "shardtip-demo", // In production, use actual WalletConnect project ID
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "shardtip-demo",
   chains: [shardeumTestnet],
 })
 

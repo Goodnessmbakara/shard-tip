@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress"
 import { Loader2, Wallet, AlertCircle, CheckCircle, TrendingUp, Users, Clock } from "lucide-react"
 
 // Mock contract address - replace with actual deployed contract
-const SHARDTIP_CONTRACT_ADDRESS = "0x1234567890123456789012345678901234567890"
+const SHARDTIP_CONTRACT_ADDRESS = "0x2e678D2Aa70A28B78b3f62316d565c7718798a6B"
 
 const SHARDTIP_ABI = [
   {

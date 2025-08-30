@@ -9,7 +9,8 @@ import { TipForm } from "@/components/tip-form"
 import { ClaimCard } from "@/components/claim-card"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Send, Wallet } from "lucide-react"
+import { Send, Wallet, Shield } from "lucide-react"
+import { VerificationCard } from "@/components/verification-card"
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount()
@@ -32,7 +33,7 @@ export default function DashboardPage() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsList className="grid w-full grid-cols-3 mb-8">
                 <TabsTrigger value="send" className="flex items-center space-x-2">
                   <Send className="w-4 h-4" />
                   <span>Send Tip</span>
@@ -40,6 +41,10 @@ export default function DashboardPage() {
                 <TabsTrigger value="claim" className="flex items-center space-x-2">
                   <Wallet className="w-4 h-4" />
                   <span>Claim Tips</span>
+                </TabsTrigger>
+                <TabsTrigger value="verify" className="flex items-center space-x-2">
+                  <Shield className="w-4 h-4" />
+                  <span>Verify</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -60,6 +65,16 @@ export default function DashboardPage() {
                   transition={{ duration: 0.4 }}
                 >
                   <ClaimCard />
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="verify">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <VerificationCard />
                 </motion.div>
               </TabsContent>
             </Tabs>
