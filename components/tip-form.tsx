@@ -15,7 +15,7 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Send, Sparkles, AlertCircle, Brain, TrendingUp } from "lucide-react"
+import { Loader2, Send, Sparkles, AlertCircle, Brain, TrendingUp, ExternalLink } from "lucide-react"
 import { getEnhancedTipSuggestion } from "@/lib/ai-sentiment"
 
 // Mock contract address - replace with actual deployed contract
@@ -44,6 +44,7 @@ export function TipForm() {
   } | null>(null)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [transactionHash, setTransactionHash] = useState<string | null>(null)
 
   const { data: balance } = useBalance({
     address,
@@ -80,6 +81,7 @@ export function TipForm() {
     e.preventDefault()
     setError("")
     setSuccess("")
+    setTransactionHash(null)
 
     // Validation
     if (!creatorAddress) {
@@ -126,6 +128,7 @@ export function TipForm() {
   // Handle successful transaction
   if (isConfirmed && !success) {
     setSuccess(`Successfully sent ${tipAmount[0]} SHM to ${creatorAddress}!`)
+    setTransactionHash(hash || null)
 
     confetti({
       particleCount: 150,
@@ -297,11 +300,34 @@ export function TipForm() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
+              className="space-y-3"
             >
               <Alert className="border-secondary text-secondary-foreground">
                 <Sparkles className="h-4 w-4" />
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
+              
+              {/* Transaction Hash */}
+              {transactionHash && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="text-center"
+                >
+                  <div className="text-xs text-muted-foreground mb-1">Transaction Hash:</div>
+                  <a
+                    href={`https://explorer.shardeum.org/tx/${transactionHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 font-mono text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer bg-primary/5 hover:bg-primary/10 px-2 py-1 rounded border border-primary/20 hover:border-primary/30"
+                  >
+                    <span>{transactionHash.slice(0, 8)}...{transactionHash.slice(-6)}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <div className="text-xs text-muted-foreground mt-1">Click to view on Shardeum Explorer</div>
+                </motion.div>
+              )}
             </motion.div>
           )}
 

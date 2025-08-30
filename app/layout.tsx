@@ -16,7 +16,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "ShardTip - Micro-Tip Creators on Shardeum",
   description: "Decentralized micro-tipping platform for creators built on Shardeum blockchain",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
