@@ -5,6 +5,12 @@
 node_modules/
 **/node_modules/
 
+# lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+**/package-lock.json
+
 # next.js
 /.next/
 /out/
