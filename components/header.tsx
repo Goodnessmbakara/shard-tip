@@ -3,6 +3,14 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { ShardLogo } from "@/components/shard-logo"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { 
+  Users, 
+  Home, 
+  TrendingUp, 
+  UserPlus,
+  Wallet
+} from "lucide-react"
 
 export function Header() {
   return (
@@ -13,7 +21,38 @@ export function Header() {
             <ShardLogo className="w-8 h-8" />
             <span className="text-xl font-semibold text-foreground">ShardTip</span>
           </Link>
-          <ConnectButton />
+
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="text-foreground hover:text-yellow-500">
+                <Home className="w-4 h-4 mr-2" />
+                Home
+              </Button>
+            </Link>
+            <Link href="/creators">
+              <Button variant="ghost" size="sm" className="text-foreground hover:text-yellow-500">
+                <Users className="w-4 h-4 mr-2" />
+                Creators
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="text-foreground hover:text-yellow-500">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/creator-registration">
+              <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Become Creator
+              </Button>
+            </Link>
+          </nav>
+
+          <div className="flex items-center space-x-3">
+            <ConnectButton />
+          </div>
         </div>
       </div>
     </header>
