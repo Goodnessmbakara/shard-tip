@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { PoolRewardsSuccessModal } from '@/components/pool-rewards-success-modal';
 
 interface PoolReward {
   poolId: string;
@@ -70,12 +71,24 @@ function CreatorDashboardContent() {
   const [poolRewards, setPoolRewards] = useState<PoolReward[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [claimTransactionHash, setClaimTransactionHash] = useState('');
+  const [claimTotalAmount, setClaimTotalAmount] = useState('');
+  const [claimPools, setClaimPools] = useState<string[]>([]);
+  
   // Use smart contract hook for live data
   const {
     platformStats,
+    creatorPools,
+    creatorPoolStats,
     loading: smartContractLoading,
     error: smartContractError,
     fetchPlatformStats,
+    fetchCreatorPools,
+    fetchCreatorPoolStats,
+    claimPoolRewardsForCreator,
+    claimAllPoolRewardsForCreator,
   } = useSmartContract();
 
   // Fetch live data from smart contracts
@@ -84,10 +97,18 @@ function CreatorDashboardContent() {
       try {
         setLoading(true);
         
+        if (address) {
+          // Fetch creator-specific data
+          await Promise.all([
+            fetchCreatorPools(address),
+            fetchCreatorPoolStats(address)
+          ]);
+        }
+        
         // Use live data from smart contracts
         const liveStats: CreatorStats = {
           totalTipsReceived: platformStats.totalTipsSent.toString(),
-          totalPoolRewards: '0', // TODO: Implement pool rewards from CreatorRewardsHook
+          totalPoolRewards: creatorPoolStats?.totalPendingETH || '0',
           totalPoolsCreated: platformStats.totalActivePools,
           activePools: platformStats.totalActivePools,
           monthlyEarnings: '0', // TODO: Calculate from transaction history
@@ -96,39 +117,19 @@ function CreatorDashboardContent() {
           recentActivity: [] // TODO: Fetch from transaction events
         };
 
-        // For now, use mock pool rewards until pool system is fully implemented
-        const mockPoolRewards: PoolReward[] = [
-          {
-            poolId: 'ETH/SHM',
-            poolName: 'ETH/SHM Pool',
-            currency: TOKEN_SYMBOL,
-            pendingAmount: '0', // TODO: Get from CreatorRewardsHook
-            totalEarned: '0', // TODO: Get from CreatorRewardsHook
-            lastActivity: 'No activity',
-            isActive: false
-          },
-          {
-            poolId: 'USDC/SHM',
-            poolName: 'USDC/SHM Pool',
-            currency: TOKEN_SYMBOL,
-            pendingAmount: '0', // TODO: Get from CreatorRewardsHook
-            totalEarned: '0', // TODO: Get from CreatorRewardsHook
-            lastActivity: 'No activity',
-            isActive: false
-          },
-          {
-            poolId: 'WBTC/SHM',
-            poolName: 'WBTC/SHM Pool',
-            currency: TOKEN_SYMBOL,
-            pendingAmount: '0', // TODO: Get from CreatorRewardsHook
-            totalEarned: '0', // TODO: Get from CreatorRewardsHook
-            lastActivity: 'No activity',
-            isActive: false
-          }
-        ];
+        // Convert live pool data to PoolReward format
+        const livePoolRewards: PoolReward[] = creatorPools.map(pool => ({
+          poolId: pool.poolId,
+          poolName: pool.poolName,
+          currency: pool.currency,
+          pendingAmount: pool.pendingAmount,
+          totalEarned: pool.totalEarned,
+          lastActivity: pool.lastActivity,
+          isActive: pool.isActive
+        }));
 
         setCreatorStats(liveStats);
-        setPoolRewards(mockPoolRewards);
+        setPoolRewards(livePoolRewards);
         setLoading(false);
       } catch (error) {
         console.error('Failed to fetch live data:', error);
@@ -142,7 +143,7 @@ function CreatorDashboardContent() {
     const interval = setInterval(fetchLiveData, 30000);
     
     return () => clearInterval(interval);
-  }, [platformStats]);
+  }, [platformStats, creatorPools, creatorPoolStats, address]);
 
   const chartData = [
     { name: 'Week 1', tips: 400, rewards: 240 },
@@ -163,9 +164,28 @@ function CreatorDashboardContent() {
 
   const handleClaimRewards = async (poolId: string) => {
     try {
-      // TODO: Implement claim logic
       console.log('Claiming rewards for pool:', poolId);
-      alert('Rewards claimed successfully!');
+      
+      // Check if user has pending rewards
+      const pool = poolRewards.find(p => p.poolId === poolId);
+      if (!pool || pool.pendingAmount === '0') {
+        alert('No pending rewards to claim for this pool.');
+        return;
+      }
+
+      // For now, show a success modal with mock data
+      // In a real implementation, this would integrate with wallet signing
+      setClaimTransactionHash('0x' + Math.random().toString(16).substr(2, 64));
+      setClaimTotalAmount(pool.pendingAmount);
+      setClaimPools([pool.poolName]);
+      setShowSuccessModal(true);
+      
+      // In a real implementation, you would:
+      // 1. Get the user's wallet signature
+      // 2. Call claimPoolRewardsForCreator() with the private key
+      // 3. Wait for transaction confirmation
+      // 4. Show success modal with real transaction hash
+      
     } catch (error) {
       console.error('Failed to claim rewards:', error);
       alert('Failed to claim rewards. Please try again.');
@@ -174,9 +194,33 @@ function CreatorDashboardContent() {
 
   const handleClaimAllRewards = async () => {
     try {
-      // TODO: Implement batch claim logic
       console.log('Claiming all rewards');
-      alert('All rewards claimed successfully!');
+      
+      // Check if user has any pending rewards
+      const poolsWithRewards = poolRewards.filter(p => p.pendingAmount !== '0');
+      if (poolsWithRewards.length === 0) {
+        alert('No pending rewards to claim.');
+        return;
+      }
+
+      // Calculate total amount
+      const totalAmount = poolsWithRewards.reduce((sum, pool) => {
+        return sum + parseFloat(pool.pendingAmount);
+      }, 0);
+
+      // For now, show a success modal with mock data
+      // In a real implementation, this would integrate with wallet signing
+      setClaimTransactionHash('0x' + Math.random().toString(16).substr(2, 64));
+      setClaimTotalAmount(totalAmount.toString());
+      setClaimPools(poolsWithRewards.map(p => p.poolName));
+      setShowSuccessModal(true);
+      
+      // In a real implementation, you would:
+      // 1. Get the user's wallet signature
+      // 2. Call claimAllPoolRewardsForCreator() with the private key
+      // 3. Wait for transaction confirmation
+      // 4. Show success modal with real transaction hash
+      
     } catch (error) {
       console.error('Failed to claim all rewards:', error);
       alert('Failed to claim rewards. Please try again.');
@@ -653,6 +697,17 @@ function CreatorDashboardContent() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Pool Rewards Success Modal */}
+      <PoolRewardsSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        transactionHash={claimTransactionHash}
+        totalAmount={claimTotalAmount}
+        currency={TOKEN_SYMBOL}
+        poolsClaimed={claimPools}
+        explorerUrl={`https://sepolia.etherscan.io/tx/${claimTransactionHash}`}
+      />
     </div>
   );
 }

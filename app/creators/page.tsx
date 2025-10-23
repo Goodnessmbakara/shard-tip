@@ -21,6 +21,7 @@ import {
 import { motion } from 'framer-motion';
 import { tipCreator, getCreatorStats, getTotalTipsSent, getTotalActivePools, getAllCreatorsFromContract } from '@/lib/network-api';
 import { useSmartContract } from '@/lib/hooks/useSmartContract';
+import { useWalletTipping } from '@/lib/hooks/useWalletTipping';
 import PoolsRewardsModal from '@/components/pools-rewards-modal';
 import { TipSuccessModal } from '@/components/tip-success-modal';
 
@@ -42,6 +43,7 @@ const CATEGORIES = ['All', 'DeFi', 'NFT', 'Education', 'Infrastructure', 'Gaming
 
 function CreatorsPageContent() {
   const { address, isConnected } = useAccount();
+  const { sendTip } = useWalletTipping();
   const {
     creators: smartContractCreators,
     platformStats,
@@ -66,20 +68,9 @@ function CreatorsPageContent() {
     recipient: string;
     recipientName: string;
   } | null>(null);
+  const [customTipAmount, setCustomTipAmount] = useState('');
+  const [showCustomTip, setShowCustomTip] = useState<{[key: string]: boolean}>({});
 
-  // Fetch live data
-  const fetchLiveData = async () => {
-    try {
-      const [tipsData, poolsData] = await Promise.all([
-        getTotalTipsSent(),
-        getTotalActivePools()
-      ]);
-      setTotalTipsSent(tipsData);
-      setTotalActivePools(poolsData);
-    } catch (error) {
-      console.error('Failed to fetch live data:', error);
-    }
-  };
 
   // Use smart contract data with fallback to mock data
   useEffect(() => {
@@ -93,7 +84,7 @@ function CreatorsPageContent() {
       console.log('No creators found in smart contract, using mock data');
       const mockCreators: Creator[] = [
         {
-          address: '0x1234...5678',
+          address: '0xEdC571996120538dB0F06AEfE5ed0c6bfa70BfB0',
           name: 'Carlos Rodriguez',
           description: 'Built secure bridge infrastructure for seamless asset transfers between Stacks and other blockchains',
           avatarUrl: '', // Will use initials fallback
@@ -104,7 +95,7 @@ function CreatorsPageContent() {
           isActive: true
         },
         {
-          address: '0x2345...6789',
+          address: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
           name: 'Emma Thompson',
           description: 'Built interactive tutorials and courses to onboard developers into the Stacks ecosystem',
           avatarUrl: '', // Will use initials fallback
@@ -115,7 +106,7 @@ function CreatorsPageContent() {
           isActive: true
         },
         {
-          address: '0x3456...7890',
+          address: '0x8ba1f109551bD432803012645Hac136c22C23c0',
           name: 'Sarah Martinez',
           description: 'Created an innovative NFT marketplace with royalty splitting and community voting features',
           avatarUrl: '', // Will use initials fallback
@@ -126,7 +117,7 @@ function CreatorsPageContent() {
           isActive: true
         },
         {
-          address: '0x4567...8901',
+          address: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
           name: 'Priya Patel',
           description: 'Developed SDK for seamless integration of decentralized storage with Stacks applications',
           avatarUrl: '', // Will use initials fallback
@@ -137,7 +128,7 @@ function CreatorsPageContent() {
           isActive: true
         },
         {
-          address: '0x5678...9012',
+          address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
           name: 'Alex Chen',
           description: 'Building next-generation DeFi protocols with focus on yield farming and liquidity mining',
           avatarUrl: '', // Will use initials fallback
@@ -148,7 +139,7 @@ function CreatorsPageContent() {
           isActive: true
         },
         {
-          address: '0x6789...0123',
+          address: '0xDc64a140Aa3E981100a9becA4E685f962fFc27C7',
           name: 'Maya Johnson',
           description: 'Creating immersive gaming experiences with blockchain integration and NFT rewards',
           avatarUrl: '', // Will use initials fallback
@@ -195,31 +186,59 @@ function CreatorsPageContent() {
     try {
       setLoading(true);
       
-      // For demo purposes, we'll simulate a transaction hash
-      // In real implementation, this would come from the actual transaction
-      const mockTransactionHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      
-      await tipCreator(creatorAddress, amount);
+      // Send the actual tip using the wallet
+      const transactionHash = await sendTip(creatorAddress, amount);
       
       // Find creator name for display
       const creator = creators.find(c => c.address === creatorAddress);
       const creatorName = creator?.name || 'Unknown Creator';
       
-      // Set success modal data
+      // Set success modal data with real transaction hash
       setTipSuccessData({
-        transactionHash: mockTransactionHash,
+        transactionHash: transactionHash,
         amount: amount.toString(),
         recipient: creatorAddress,
         recipientName: creatorName,
       });
       
       setShowTipSuccess(true);
+      
+      // Refresh the creators data to show updated tip amounts
+      fetchCreators();
+      fetchPlatformStats();
+      
     } catch (error) {
       console.error('Failed to tip creator:', error);
-      alert('Failed to send tip. Please try again.');
+      alert(`Failed to send tip: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCustomTip = async (creatorAddress: string) => {
+    const amount = parseFloat(customTipAmount);
+    
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid tip amount');
+      return;
+    }
+
+    if (amount < 0.001) {
+      alert('Minimum tip amount is 0.001 ETH');
+      return;
+    }
+
+    if (amount > 10) {
+      alert('Maximum tip amount is 10 ETH');
+      return;
+    }
+
+    // Hide custom tip input
+    setShowCustomTip(prev => ({ ...prev, [creatorAddress]: false }));
+    setCustomTipAmount('');
+    
+    // Send the tip
+    await handleTip(creatorAddress, amount);
   };
 
   const getShortAddress = (address: string) => {
@@ -353,9 +372,16 @@ function CreatorsPageContent() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                          {creator.name}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                            {creator.name}
+                          </h3>
+                          {isConnected && address && address.toLowerCase() === creator.address.toLowerCase() && (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 text-xs">
+                              You
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-slate-600 dark:text-slate-300">{getShortAddress(creator.address)}</p>
                       </div>
                     </div>
@@ -423,16 +449,70 @@ function CreatorsPageContent() {
                         </Button>
                       ))}
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedCreator(creator.address);
-                        setShowPoolsRewards(true);
-                      }}
-                      className="w-full border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-500"
-                    >
-                      View Pools & Rewards
-                    </Button>
+                    
+                    {/* Custom Tip Section */}
+                    {showCustomTip[creator.address] ? (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Enter amount"
+                            value={customTipAmount}
+                            onChange={(e) => setCustomTipAmount(e.target.value)}
+                            className="flex-1 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white"
+                            min="0.001"
+                            max="10"
+                            step="0.001"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => handleCustomTip(creator.address)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium"
+                          >
+                            Send
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowCustomTip(prev => ({ ...prev, [creator.address]: false }))}
+                            className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                          Min: 0.001 ETH • Max: 10 ETH
+                        </p>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowCustomTip(prev => ({ ...prev, [creator.address]: true }))}
+                        className="w-full border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-purple-500 hover:text-purple-500"
+                      >
+                        Custom Amount
+                      </Button>
+                    )}
+                    {/* Only show Pools & Rewards button if user is the creator */}
+                    {isConnected && address && address.toLowerCase() === creator.address.toLowerCase() ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedCreator(creator.address);
+                          setShowPoolsRewards(true);
+                        }}
+                        className="w-full border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-500"
+                      >
+                        View Pools & Rewards
+                      </Button>
+                    ) : isConnected && address && address.toLowerCase() !== creator.address.toLowerCase() ? (
+                      <div className="text-center py-2">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Connect as this creator to view their pools & rewards
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
@@ -477,6 +557,19 @@ function CreatorsPageContent() {
             setSelectedCreator(null);
           }}
           creatorAddress={selectedCreator}
+        />
+      )}
+
+      {/* Tip Success Modal */}
+      {tipSuccessData && (
+        <TipSuccessModal
+          isOpen={showTipSuccess}
+          onClose={() => setShowTipSuccess(false)}
+          transactionHash={tipSuccessData.transactionHash}
+          amount={tipSuccessData.amount}
+          recipient={tipSuccessData.recipient}
+          recipientName={tipSuccessData.recipientName}
+          explorerUrl={`https://sepolia.etherscan.io/tx/${tipSuccessData.transactionHash}`}
         />
       )}
     </div>
@@ -648,19 +741,6 @@ function CreatorRegistrationModal({ isOpen, onClose, onSuccess }: CreatorRegistr
           </form>
         </div>
       </div>
-      
-      {/* Tip Success Modal */}
-      {tipSuccessData && (
-        <TipSuccessModal
-          isOpen={showTipSuccess}
-          onClose={() => setShowTipSuccess(false)}
-          transactionHash={tipSuccessData.transactionHash}
-          amount={tipSuccessData.amount}
-          recipient={tipSuccessData.recipient}
-          recipientName={tipSuccessData.recipientName}
-          explorerUrl={`https://sepolia.etherscan.io/tx/${tipSuccessData.transactionHash}`}
-        />
-      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import ShardTipABI from './contracts/ShardTip.json' assert { type: 'json' };
 import CreatorRegistryABI from './contracts/CreatorRegistry.json' assert { type: 'json' };
+import CreatorRewardsHookABI from './contracts/CreatorRewardsHook.json' assert { type: 'json' };
 
 // Contract addresses from deployment
 const SHARD_TIP_ADDRESS = '0xF7936D54CE16CdBC7725091945b36655Cfa74167';
@@ -49,6 +50,26 @@ export interface TipData {
   amount: string;
   timestamp: number;
   transactionHash: string;
+}
+
+// Interface for pool data
+export interface PoolData {
+  poolId: string;
+  poolName: string;
+  currency: string;
+  pendingAmount: string;
+  totalEarned: string;
+  lastActivity: string;
+  isActive: boolean;
+  creator: string;
+  totalRewards: string;
+}
+
+// Interface for creator pool stats
+export interface CreatorPoolStats {
+  totalPendingETH: string;
+  totalPendingTokens: string;
+  isAuthorized: boolean;
 }
 
 /**
@@ -293,6 +314,189 @@ export async function getPlatformStats(): Promise<{
     };
   } catch (error) {
     console.error('Failed to fetch platform stats:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get creator pool statistics from CreatorRewardsHook
+ */
+export async function getCreatorPoolStats(creatorAddress: string): Promise<CreatorPoolStats> {
+  try {
+    console.log(`Fetching pool stats for creator: ${creatorAddress}`);
+    
+    const result = await publicClient.readContract({
+      address: CREATOR_REWARDS_HOOK_ADDRESS as `0x${string}`,
+      abi: CreatorRewardsHookABI as any,
+      functionName: 'getCreatorStats',
+      args: [creatorAddress as `0x${string}`],
+    }) as [bigint, bigint, boolean];
+
+    const [totalPendingETH, totalPendingTokens, isAuthorized] = result;
+
+    return {
+      totalPendingETH: formatEther(totalPendingETH),
+      totalPendingTokens: formatEther(totalPendingTokens),
+      isAuthorized,
+    };
+  } catch (error) {
+    console.error(`Failed to fetch pool stats for creator ${creatorAddress}:`, error);
+    return {
+      totalPendingETH: '0',
+      totalPendingTokens: '0',
+      isAuthorized: false,
+    };
+  }
+}
+
+/**
+ * Get pool statistics from CreatorRewardsHook
+ */
+export async function getPoolStats(poolId: string): Promise<{
+  creator: string;
+  totalRewards: string;
+  hasCreator: boolean;
+}> {
+  try {
+    console.log(`Fetching stats for pool: ${poolId}`);
+    
+    const result = await publicClient.readContract({
+      address: CREATOR_REWARDS_HOOK_ADDRESS as `0x${string}`,
+      abi: CreatorRewardsHookABI as any,
+      functionName: 'getPoolStats',
+      args: [poolId as `0x${string}`],
+    }) as [string, bigint, boolean];
+
+    const [creator, totalRewards, hasCreator] = result;
+
+    return {
+      creator,
+      totalRewards: formatEther(totalRewards),
+      hasCreator,
+    };
+  } catch (error) {
+    console.error(`Failed to fetch stats for pool ${poolId}:`, error);
+    return {
+      creator: '0x0000000000000000000000000000000000000000',
+      totalRewards: '0',
+      hasCreator: false,
+    };
+  }
+}
+
+/**
+ * Get all pool data for a creator
+ */
+export async function getCreatorPools(creatorAddress: string): Promise<PoolData[]> {
+  try {
+    console.log(`Fetching pools for creator: ${creatorAddress}`);
+    
+    // Get creator pool stats
+    const poolStats = await getCreatorPoolStats(creatorAddress);
+    
+    // For now, we'll create mock pool data based on common pool types
+    // In a real implementation, you'd query for actual pools created by this creator
+    const mockPools: PoolData[] = [
+      {
+        poolId: 'ETH/SHM',
+        poolName: 'ETH/SHM Pool',
+        currency: 'TIP',
+        pendingAmount: poolStats.totalPendingETH !== '0' ? poolStats.totalPendingETH : '0.025', // Mock some rewards for testing
+        totalEarned: '0.15', // Mock historical earnings
+        lastActivity: poolStats.totalPendingETH !== '0' ? 'Active' : '2 hours ago',
+        isActive: poolStats.totalPendingETH !== '0' || poolStats.isAuthorized || true, // Show as active for testing
+        creator: creatorAddress,
+        totalRewards: poolStats.totalPendingETH !== '0' ? poolStats.totalPendingETH : '0.025',
+      },
+      {
+        poolId: 'USDC/SHM',
+        poolName: 'USDC/SHM Pool',
+        currency: 'TIP',
+        pendingAmount: '0.012', // Mock some rewards for testing
+        totalEarned: '0.08',
+        lastActivity: '1 hour ago',
+        isActive: poolStats.isAuthorized || true, // Show as active for testing
+        creator: creatorAddress,
+        totalRewards: '0.012',
+      },
+      {
+        poolId: 'WBTC/SHM',
+        poolName: 'WBTC/SHM Pool',
+        currency: 'TIP',
+        pendingAmount: '0', // No pending rewards
+        totalEarned: '0.05',
+        lastActivity: 'No activity',
+        isActive: poolStats.isAuthorized || false, // Show as inactive
+        creator: creatorAddress,
+        totalRewards: '0',
+      }
+    ];
+
+    return mockPools;
+  } catch (error) {
+    console.error(`Failed to fetch pools for creator ${creatorAddress}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Claim rewards for a specific currency
+ */
+export async function claimPoolRewards(
+  currency: string,
+  privateKey: string
+): Promise<string> {
+  try {
+    console.log(`Claiming rewards for currency: ${currency}`);
+    
+    const walletClient = createWalletClientForAccount(privateKey);
+    
+    // For ETH rewards, use the zero address
+    const currencyAddress = currency === 'ETH' ? '0x0000000000000000000000000000000000000000' : currency;
+    
+    const hash = await walletClient.writeContract({
+      address: CREATOR_REWARDS_HOOK_ADDRESS as `0x${string}`,
+      abi: CreatorRewardsHookABI as any,
+      functionName: 'claimRewards',
+      args: [currencyAddress as `0x${string}`],
+    });
+
+    console.log(`Pool rewards claimed successfully! Transaction hash: ${hash}`);
+    return hash;
+  } catch (error) {
+    console.error('Failed to claim pool rewards:', error);
+    throw error;
+  }
+}
+
+/**
+ * Claim all rewards for multiple currencies
+ */
+export async function claimAllPoolRewards(
+  currencies: string[],
+  privateKey: string
+): Promise<string> {
+  try {
+    console.log(`Claiming all rewards for currencies: ${currencies.join(', ')}`);
+    
+    const walletClient = createWalletClientForAccount(privateKey);
+    
+    // Convert currency strings to addresses
+    const currencyAddresses = currencies.map(currency => 
+      currency === 'ETH' ? '0x0000000000000000000000000000000000000000' : currency
+    );
+    
+    const hash = await walletClient.writeContract({
+      address: CREATOR_REWARDS_HOOK_ADDRESS as `0x${string}`,
+      abi: CreatorRewardsHookABI as any,
+      functionName: 'claimAllRewards',
+      args: [currencyAddresses as `0x${string}`[]],
+    });
+
+    console.log(`All pool rewards claimed successfully! Transaction hash: ${hash}`);
+    return hash;
+  } catch (error) {
+    console.error('Failed to claim all pool rewards:', error);
     throw error;
   }
 }

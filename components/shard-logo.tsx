@@ -1,59 +1,70 @@
 export function ShardLogo({ className = "w-8 h-8" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className={className} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="shardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="50%" stopColor="#8B5CF6" />
-          <stop offset="100%" stopColor="#EC4899" />
+        {/* Modern gradient - more professional and DeFi-focused */}
+        <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2563EB" />
+          <stop offset="50%" stopColor="#7C3AED" />
+          <stop offset="100%" stopColor="#DB2777" />
         </linearGradient>
-        <linearGradient id="tipGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        
+        {/* Accent gradient for highlights */}
+        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#F59E0B" />
           <stop offset="100%" stopColor="#EF4444" />
         </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+        
+        {/* Subtle glow effect */}
+        <filter id="subtleGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
           <feMerge> 
             <feMergeNode in="coloredBlur"/>
             <feMergeNode in="SourceGraphic"/>
           </feMerge>
         </filter>
+        
+        {/* Shadow for depth */}
+        <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.1"/>
+        </filter>
       </defs>
       
-      {/* Background circle with gradient */}
-      <circle cx="16" cy="16" r="15" fill="url(#shardGradient)" opacity="0.1" />
+      {/* Background circle - subtle and professional */}
+      <circle cx="20" cy="20" r="18" fill="url(#primaryGradient)" opacity="0.05" />
       
-      {/* Main diamond shape representing a shard */}
+      {/* Main shard shape - simplified and more geometric */}
       <path 
-        d="M16 4L24 12L16 20L8 12L16 4Z" 
-        fill="url(#shardGradient)" 
-        stroke="url(#shardGradient)" 
+        d="M20 6L28 14L20 22L12 14L20 6Z" 
+        fill="url(#primaryGradient)" 
+        stroke="url(#primaryGradient)" 
         strokeWidth="0.5"
-        filter="url(#glow)"
+        filter="url(#subtleGlow)"
       />
       
-      {/* Inner diamond representing the tip */}
+      {/* Inner core representing the tip/reward */}
       <path 
-        d="M16 8L20 12L16 16L12 12L16 8Z" 
-        fill="url(#tipGradient)" 
-        opacity="0.8"
+        d="M20 10L24 14L20 18L16 14L20 10Z" 
+        fill="url(#accentGradient)" 
+        opacity="0.9"
       />
       
-      {/* Sparkle effect */}
-      <circle cx="16" cy="12" r="1.5" fill="white" opacity="0.9" />
+      {/* Central highlight - represents the "tip" concept */}
+      <circle cx="20" cy="14" r="2" fill="white" opacity="0.8" />
       
-      {/* Decorative elements */}
-      <circle cx="12" cy="8" r="0.8" fill="white" opacity="0.6" />
-      <circle cx="20" cy="8" r="0.8" fill="white" opacity="0.6" />
-      <circle cx="12" cy="16" r="0.8" fill="white" opacity="0.6" />
-      <circle cx="20" cy="16" r="0.8" fill="white" opacity="0.6" />
-      
-      {/* Tip arrow pointing up */}
+      {/* Simplified directional elements - representing flow/movement */}
       <path 
-        d="M16 18L14 22L16 20L18 22L16 18Z" 
-        fill="url(#tipGradient)" 
+        d="M20 20L18 24L20 22L22 24L20 20Z" 
+        fill="url(#accentGradient)" 
         opacity="0.7"
+        filter="url(#dropShadow)"
       />
+      
+      {/* Subtle corner accents - representing the "shard" concept */}
+      <circle cx="14" cy="10" r="1" fill="white" opacity="0.4" />
+      <circle cx="26" cy="10" r="1" fill="white" opacity="0.4" />
+      <circle cx="14" cy="18" r="1" fill="white" opacity="0.4" />
+      <circle cx="26" cy="18" r="1" fill="white" opacity="0.4" />
     </svg>
   )
 }

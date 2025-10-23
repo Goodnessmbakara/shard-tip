@@ -149,19 +149,44 @@ export async function getNetworkCycleInfo(): Promise<NetworkCycleInfo | null> {
 }
 
 // Creator-related functions
-export async function tipCreator(creatorAddress: string, amount: number): Promise<void> {
+export async function tipCreator(creatorAddress: string, amount: number): Promise<string> {
   try {
-    // TODO: Implement actual tipping logic with smart contract interaction
-    console.log(`Tipping ${amount} tokens to ${creatorAddress}`)
+    console.log(`Tipping ${amount} ETH to ${creatorAddress}`)
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Import the smart contract API function
+    const { sendTipToCreator } = await import('./smart-contract-api')
     
-    // For now, just log the action
-    console.log('Tip sent successfully!')
+    // Get the user's private key from their wallet
+    // Note: In a real implementation, you'd get this from the connected wallet
+    // For now, we'll need to handle this through the wallet connection
+    const privateKey = await getWalletPrivateKey()
+    
+    if (!privateKey) {
+      throw new Error('No wallet connected or private key available')
+    }
+    
+    // Send the actual tip using the smart contract
+    const transactionHash = await sendTipToCreator(creatorAddress, amount, privateKey)
+    
+    console.log(`Tip sent successfully! Transaction hash: ${transactionHash}`)
+    return transactionHash
   } catch (error) {
     console.error('Failed to send tip:', error)
     throw error
+  }
+}
+
+// Helper function to get wallet private key
+// In a real implementation, this would integrate with wallet providers
+async function getWalletPrivateKey(): Promise<string | null> {
+  try {
+    // This is a placeholder - in reality, you'd get this from the connected wallet
+    // For now, we'll return null to indicate no private key is available
+    // The frontend should handle wallet connection and signing
+    return null
+  } catch (error) {
+    console.error('Failed to get wallet private key:', error)
+    return null
   }
 }
 
