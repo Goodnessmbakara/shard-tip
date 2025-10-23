@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { ClientOnly } from '@/components/client-only';
+import { useSmartContract } from '@/lib/hooks/useSmartContract';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,85 +69,80 @@ function CreatorDashboardContent() {
   const [creatorStats, setCreatorStats] = useState<CreatorStats | null>(null);
   const [poolRewards, setPoolRewards] = useState<PoolReward[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Use smart contract hook for live data
+  const {
+    platformStats,
+    loading: smartContractLoading,
+    error: smartContractError,
+    fetchPlatformStats,
+  } = useSmartContract();
 
-  // Mock data - replace with actual API calls
+  // Fetch live data from smart contracts
   useEffect(() => {
-    const mockStats: CreatorStats = {
-      totalTipsReceived: '12500',
-      totalPoolRewards: '3400',
-      totalPoolsCreated: 6,
-      activePools: 4,
-      monthlyEarnings: '2800',
-      weeklyGrowth: 12.5,
-      topPerformingPool: 'ETH/SHM Pool',
-      recentActivity: [
-        {
-          id: '1',
-          from: '0x1234...5678',
-          amount: '50',
-          timestamp: '2 hours ago',
-          type: 'direct',
-        },
-        {
-          id: '2',
-          from: 'Pool Swap',
-          amount: '12.5',
-          timestamp: '4 hours ago',
-          type: 'pool_reward',
-          poolId: 'ETH/SHM'
-        },
-        {
-          id: '3',
-          from: '0x2345...6789',
-          amount: '25',
-          timestamp: '1 day ago',
-          type: 'direct',
-        },
-        {
-          id: '4',
-          from: 'Pool Swap',
-          amount: '8.3',
-          timestamp: '2 days ago',
-          type: 'pool_reward',
-          poolId: 'USDC/SHM'
-        }
-      ]
+    const fetchLiveData = async () => {
+      try {
+        setLoading(true);
+        
+        // Use live data from smart contracts
+        const liveStats: CreatorStats = {
+          totalTipsReceived: platformStats.totalTipsSent.toString(),
+          totalPoolRewards: '0', // TODO: Implement pool rewards from CreatorRewardsHook
+          totalPoolsCreated: platformStats.totalActivePools,
+          activePools: platformStats.totalActivePools,
+          monthlyEarnings: '0', // TODO: Calculate from transaction history
+          weeklyGrowth: 0, // TODO: Calculate growth percentage
+          topPerformingPool: 'N/A', // TODO: Implement pool performance tracking
+          recentActivity: [] // TODO: Fetch from transaction events
+        };
+
+        // For now, use mock pool rewards until pool system is fully implemented
+        const mockPoolRewards: PoolReward[] = [
+          {
+            poolId: 'ETH/SHM',
+            poolName: 'ETH/SHM Pool',
+            currency: TOKEN_SYMBOL,
+            pendingAmount: '0', // TODO: Get from CreatorRewardsHook
+            totalEarned: '0', // TODO: Get from CreatorRewardsHook
+            lastActivity: 'No activity',
+            isActive: false
+          },
+          {
+            poolId: 'USDC/SHM',
+            poolName: 'USDC/SHM Pool',
+            currency: TOKEN_SYMBOL,
+            pendingAmount: '0', // TODO: Get from CreatorRewardsHook
+            totalEarned: '0', // TODO: Get from CreatorRewardsHook
+            lastActivity: 'No activity',
+            isActive: false
+          },
+          {
+            poolId: 'WBTC/SHM',
+            poolName: 'WBTC/SHM Pool',
+            currency: TOKEN_SYMBOL,
+            pendingAmount: '0', // TODO: Get from CreatorRewardsHook
+            totalEarned: '0', // TODO: Get from CreatorRewardsHook
+            lastActivity: 'No activity',
+            isActive: false
+          }
+        ];
+
+        setCreatorStats(liveStats);
+        setPoolRewards(mockPoolRewards);
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch live data:', error);
+        setLoading(false);
+      }
     };
 
-    const mockPoolRewards: PoolReward[] = [
-      {
-        poolId: 'ETH/SHM',
-        poolName: 'ETH/SHM Pool',
-        currency: TOKEN_SYMBOL,
-        pendingAmount: '125.50',
-        totalEarned: '2100.75',
-        lastActivity: '2 hours ago',
-        isActive: true
-      },
-      {
-        poolId: 'USDC/SHM',
-        poolName: 'USDC/SHM Pool',
-        currency: TOKEN_SYMBOL,
-        pendingAmount: '45.25',
-        totalEarned: '890.30',
-        lastActivity: '1 day ago',
-        isActive: true
-      },
-      {
-        poolId: 'WBTC/SHM',
-        poolName: 'WBTC/SHM Pool',
-        currency: TOKEN_SYMBOL,
-        pendingAmount: '0',
-        totalEarned: '320.45',
-        lastActivity: '3 days ago',
-        isActive: false
-      }
-    ];
-
-    setCreatorStats(mockStats);
-    setPoolRewards(mockPoolRewards);
-    setLoading(false);
-  }, []);
+    fetchLiveData();
+    
+    // Set up periodic refresh (every 30 seconds)
+    const interval = setInterval(fetchLiveData, 30000);
+    
+    return () => clearInterval(interval);
+  }, [platformStats]);
 
   const chartData = [
     { name: 'Week 1', tips: 400, rewards: 240 },
@@ -187,10 +183,16 @@ function CreatorDashboardContent() {
     }
   };
 
-  if (loading) {
+  if (loading || smartContractLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
-        <div className="text-slate-900 dark:text-white text-xl">Loading dashboard...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="text-slate-900 dark:text-white mt-4">Loading live data from blockchain...</p>
+          {smartContractError && (
+            <p className="text-red-500 text-sm mt-2">Error: {smartContractError}</p>
+          )}
+        </div>
       </div>
     );
   }

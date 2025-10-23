@@ -22,6 +22,7 @@ import { motion } from 'framer-motion';
 import { tipCreator, getCreatorStats, getTotalTipsSent, getTotalActivePools, getAllCreatorsFromContract } from '@/lib/network-api';
 import { useSmartContract } from '@/lib/hooks/useSmartContract';
 import PoolsRewardsModal from '@/components/pools-rewards-modal';
+import { TipSuccessModal } from '@/components/tip-success-modal';
 
 interface Creator {
   address: string;
@@ -58,6 +59,13 @@ function CreatorsPageContent() {
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [showPoolsRewards, setShowPoolsRewards] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState<string | null>(null);
+  const [showTipSuccess, setShowTipSuccess] = useState(false);
+  const [tipSuccessData, setTipSuccessData] = useState<{
+    transactionHash: string;
+    amount: string;
+    recipient: string;
+    recipientName: string;
+  } | null>(null);
 
   // Fetch live data
   const fetchLiveData = async () => {
@@ -185,12 +193,32 @@ function CreatorsPageContent() {
     }
 
     try {
+      setLoading(true);
+      
+      // For demo purposes, we'll simulate a transaction hash
+      // In real implementation, this would come from the actual transaction
+      const mockTransactionHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+      
       await tipCreator(creatorAddress, amount);
-      // Refresh creator stats
-      // await refreshCreatorStats(creatorAddress);
+      
+      // Find creator name for display
+      const creator = creators.find(c => c.address === creatorAddress);
+      const creatorName = creator?.name || 'Unknown Creator';
+      
+      // Set success modal data
+      setTipSuccessData({
+        transactionHash: mockTransactionHash,
+        amount: amount.toString(),
+        recipient: creatorAddress,
+        recipientName: creatorName,
+      });
+      
+      setShowTipSuccess(true);
     } catch (error) {
       console.error('Failed to tip creator:', error);
       alert('Failed to send tip. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -620,6 +648,19 @@ function CreatorRegistrationModal({ isOpen, onClose, onSuccess }: CreatorRegistr
           </form>
         </div>
       </div>
+      
+      {/* Tip Success Modal */}
+      {tipSuccessData && (
+        <TipSuccessModal
+          isOpen={showTipSuccess}
+          onClose={() => setShowTipSuccess(false)}
+          transactionHash={tipSuccessData.transactionHash}
+          amount={tipSuccessData.amount}
+          recipient={tipSuccessData.recipient}
+          recipientName={tipSuccessData.recipientName}
+          explorerUrl={`https://sepolia.etherscan.io/tx/${tipSuccessData.transactionHash}`}
+        />
+      )}
     </div>
   );
 }
