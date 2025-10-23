@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+import { ClientOnly } from '@/components/client-only';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +21,12 @@ import {
   CheckCircle,
   AlertCircle,
   BarChart3,
-  PieChart,
+  PieChart as PieChartIcon,
   Calendar,
   ExternalLink
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 interface PoolReward {
   poolId: string;
@@ -57,9 +59,11 @@ interface CreatorStats {
 }
 
 const CHART_COLORS = ['#fbbf24', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
+const TOKEN_SYMBOL = 'TIP';
 
-export default function CreatorDashboard() {
+function CreatorDashboardContent() {
   const { address, isConnected } = useAccount();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [creatorStats, setCreatorStats] = useState<CreatorStats | null>(null);
   const [poolRewards, setPoolRewards] = useState<PoolReward[]>([]);
@@ -113,7 +117,7 @@ export default function CreatorDashboard() {
       {
         poolId: 'ETH/SHM',
         poolName: 'ETH/SHM Pool',
-        currency: 'SHM',
+        currency: TOKEN_SYMBOL,
         pendingAmount: '125.50',
         totalEarned: '2100.75',
         lastActivity: '2 hours ago',
@@ -122,7 +126,7 @@ export default function CreatorDashboard() {
       {
         poolId: 'USDC/SHM',
         poolName: 'USDC/SHM Pool',
-        currency: 'SHM',
+        currency: TOKEN_SYMBOL,
         pendingAmount: '45.25',
         totalEarned: '890.30',
         lastActivity: '1 day ago',
@@ -131,7 +135,7 @@ export default function CreatorDashboard() {
       {
         poolId: 'WBTC/SHM',
         poolName: 'WBTC/SHM Pool',
-        currency: 'SHM',
+        currency: TOKEN_SYMBOL,
         pendingAmount: '0',
         totalEarned: '320.45',
         lastActivity: '3 days ago',
@@ -185,32 +189,32 @@ export default function CreatorDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading dashboard...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-slate-900 dark:text-white text-xl">Loading dashboard...</div>
       </div>
     );
   }
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h1>
-          <p className="text-gray-400">Please connect your wallet to view your creator dashboard</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Connect Your Wallet</h1>
+          <p className="text-slate-600 dark:text-slate-300">Please connect your wallet to view your creator dashboard</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Header */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white">Creator Dashboard</h1>
-              <p className="text-gray-300 mt-2">
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Creator Dashboard</h1>
+              <p className="text-slate-600 dark:text-slate-300 mt-2">
                 Monitor your earnings and pool performance
               </p>
             </div>
@@ -218,7 +222,10 @@ export default function CreatorDashboard() {
               <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
                 Active Creator
               </Badge>
-              <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold">
+              <Button 
+                onClick={() => router.push('/creators')}
+                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold"
+              >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 View Public Profile
               </Button>
@@ -235,13 +242,13 @@ export default function CreatorDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm font-medium">Total Tips</p>
-                    <p className="text-2xl font-bold text-white">{creatorStats?.totalTipsReceived}</p>
-                    <p className="text-green-400 text-sm flex items-center mt-1">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm font-medium">Total Tips</p>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{creatorStats?.totalTipsReceived}</p>
+                    <p className="text-green-500 text-sm flex items-center mt-1">
                       <ArrowUpRight className="w-4 h-4 mr-1" />
                       +12.5% this week
                     </p>
@@ -259,13 +266,13 @@ export default function CreatorDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm font-medium">Pool Rewards</p>
-                    <p className="text-2xl font-bold text-white">{creatorStats?.totalPoolRewards}</p>
-                    <p className="text-green-400 text-sm flex items-center mt-1">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm font-medium">Pool Rewards</p>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{creatorStats?.totalPoolRewards}</p>
+                    <p className="text-green-500 text-sm flex items-center mt-1">
                       <ArrowUpRight className="w-4 h-4 mr-1" />
                       +8.3% this week
                     </p>
@@ -283,13 +290,13 @@ export default function CreatorDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm font-medium">Active Pools</p>
-                    <p className="text-2xl font-bold text-white">{creatorStats?.activePools}</p>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm font-medium">Active Pools</p>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{creatorStats?.activePools}</p>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">
                       {creatorStats?.totalPoolsCreated} total created
                     </p>
                   </div>
@@ -306,19 +313,19 @@ export default function CreatorDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm font-medium">Monthly Earnings</p>
-                    <p className="text-2xl font-bold text-white">{creatorStats?.monthlyEarnings}</p>
-                    <p className="text-green-400 text-sm flex items-center mt-1">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm font-medium">Monthly Earnings</p>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{creatorStats?.monthlyEarnings}</p>
+                    <p className="text-green-500 text-sm flex items-center mt-1">
                       <ArrowUpRight className="w-4 h-4 mr-1" />
                       +15.2% vs last month
                     </p>
                   </div>
-                  <div className="bg-purple-500/20 p-3 rounded-full">
-                    <Wallet className="w-6 h-6 text-purple-500" />
+                  <div className="bg-orange-500/20 p-3 rounded-full">
+                    <Wallet className="w-6 h-6 text-orange-500" />
                   </div>
                 </div>
               </CardContent>
@@ -328,17 +335,17 @@ export default function CreatorDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-800/50 border-gray-700">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
+          <TabsList className="grid w-full grid-cols-4 bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-green-600 data-[state=active]:text-white">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="pools" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
+            <TabsTrigger value="pools" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-green-600 data-[state=active]:text-white">
               Pool Rewards
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-green-600 data-[state=active]:text-white">
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="activity" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
+            <TabsTrigger value="activity" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-green-600 data-[state=active]:text-white">
               Activity
             </TabsTrigger>
           </TabsList>
@@ -346,9 +353,9 @@ export default function CreatorDashboard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Earnings Chart */}
-              <Card className="bg-gray-800/50 border-gray-700">
+              <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center">
+                  <CardTitle className="text-slate-900 dark:text-white flex items-center">
                     <BarChart3 className="w-5 h-5 mr-2" />
                     Earnings Overview
                   </CardTitle>
@@ -387,17 +394,17 @@ export default function CreatorDashboard() {
               </Card>
 
               {/* Pool Performance */}
-              <Card className="bg-gray-800/50 border-gray-700">
+              <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <PieChart className="w-5 h-5 mr-2" />
+                  <CardTitle className="text-slate-900 dark:text-white flex items-center">
+                    <PieChartIcon className="w-5 h-5 mr-2" />
                     Pool Performance
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <RechartsPieChart>
-                      <RechartsPie
+                    <PieChart>
+                      <Pie
                         data={poolPerformanceData}
                         cx="50%"
                         cy="50%"
@@ -408,7 +415,7 @@ export default function CreatorDashboard() {
                         {poolPerformanceData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
-                      </RechartsPie>
+                      </Pie>
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: '#1f2937', 
@@ -417,16 +424,16 @@ export default function CreatorDashboard() {
                           color: '#ffffff'
                         }} 
                       />
-                    </RechartsPieChart>
+                    </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
 
             {/* Recent Activity */}
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
+                <CardTitle className="text-slate-900 dark:text-white flex items-center">
                   <Activity className="w-5 h-5 mr-2" />
                   Recent Activity
                 </CardTitle>
@@ -439,7 +446,7 @@ export default function CreatorDashboard() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-slate-100/50 dark:bg-slate-700/50 rounded-lg"
                     >
                       <div className="flex items-center space-x-4">
                         <div className={`p-2 rounded-full ${
@@ -454,10 +461,10 @@ export default function CreatorDashboard() {
                           )}
                         </div>
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="text-slate-900 dark:text-white font-medium">
                             {activity.from}
                           </p>
-                          <p className="text-gray-400 text-sm">
+                          <p className="text-slate-600 dark:text-slate-300 text-sm">
                             {activity.type === 'pool_reward' && activity.poolId && (
                               <span className="text-yellow-500">Pool: {activity.poolId}</span>
                             )}
@@ -466,8 +473,8 @@ export default function CreatorDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-green-400 font-semibold">+{activity.amount} SHM</p>
-                        <p className="text-gray-400 text-sm">{activity.timestamp}</p>
+                        <p className="text-green-500 font-semibold">+{activity.amount} {TOKEN_SYMBOL}</p>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm">{activity.timestamp}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -478,10 +485,10 @@ export default function CreatorDashboard() {
 
           <TabsContent value="pools" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-white">Pool Rewards</h2>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Pool Rewards</h2>
               <Button 
                 onClick={handleClaimAllRewards}
-                className="bg-green-500 hover:bg-green-600 text-white"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
               >
                 Claim All Rewards
               </Button>
@@ -495,14 +502,14 @@ export default function CreatorDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="bg-gray-800/50 border-gray-700">
+                  <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-white">{pool.poolName}</CardTitle>
+                        <CardTitle className="text-slate-900 dark:text-white">{pool.poolName}</CardTitle>
                         <Badge className={
                           pool.isActive 
                             ? 'bg-green-500/20 text-green-500 border-green-500/30'
-                            : 'bg-gray-500/20 text-gray-500 border-gray-500/30'
+                            : 'bg-slate-500/20 text-slate-500 border-slate-500/30'
                         }>
                           {pool.isActive ? 'Active' : 'Inactive'}
                         </Badge>
@@ -511,27 +518,27 @@ export default function CreatorDashboard() {
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Pending Rewards:</span>
-                          <span className="text-yellow-400 font-semibold">
+                          <span className="text-slate-600 dark:text-slate-300">Pending Rewards:</span>
+                          <span className="text-yellow-500 font-semibold">
                             {pool.pendingAmount} {pool.currency}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Total Earned:</span>
-                          <span className="text-green-400 font-semibold">
+                          <span className="text-slate-600 dark:text-slate-300">Total Earned:</span>
+                          <span className="text-green-500 font-semibold">
                             {pool.totalEarned} {pool.currency}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Last Activity:</span>
-                          <span className="text-gray-300">{pool.lastActivity}</span>
+                          <span className="text-slate-600 dark:text-slate-300">Last Activity:</span>
+                          <span className="text-slate-700 dark:text-slate-200">{pool.lastActivity}</span>
                         </div>
                       </div>
 
                       {pool.pendingAmount !== '0' && (
                         <Button
                           onClick={() => handleClaimRewards(pool.poolId)}
-                          className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
+                          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
                         >
                           Claim {pool.pendingAmount} {pool.currency}
                         </Button>
@@ -545,9 +552,9 @@ export default function CreatorDashboard() {
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gray-800/50 border-gray-700">
+              <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-white">Weekly Performance</CardTitle>
+                  <CardTitle className="text-slate-900 dark:text-white">Weekly Performance</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -570,29 +577,29 @@ export default function CreatorDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gray-800/50 border-gray-700">
+              <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-white">Growth Metrics</CardTitle>
+                  <CardTitle className="text-slate-900 dark:text-white">Growth Metrics</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-gray-400">Weekly Growth</span>
-                      <span className="text-green-400 font-semibold">+12.5%</span>
+                      <span className="text-slate-600 dark:text-slate-300">Weekly Growth</span>
+                      <span className="text-green-500 font-semibold">+12.5%</span>
                     </div>
                     <Progress value={75} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-gray-400">Pool Utilization</span>
-                      <span className="text-blue-400 font-semibold">68%</span>
+                      <span className="text-slate-600 dark:text-slate-300">Pool Utilization</span>
+                      <span className="text-blue-500 font-semibold">68%</span>
                     </div>
                     <Progress value={68} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-gray-400">Community Engagement</span>
-                      <span className="text-purple-400 font-semibold">84%</span>
+                      <span className="text-slate-600 dark:text-slate-300">Community Engagement</span>
+                      <span className="text-orange-500 font-semibold">84%</span>
                     </div>
                     <Progress value={84} className="h-2" />
                   </div>
@@ -602,14 +609,14 @@ export default function CreatorDashboard() {
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-6">
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-white">All Activity</CardTitle>
+                <CardTitle className="text-slate-900 dark:text-white">All Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {creatorStats?.recentActivity.map((activity, index) => (
-                    <div key={activity.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                    <div key={activity.id} className="flex items-center justify-between p-4 bg-slate-100/50 dark:bg-slate-700/50 rounded-lg">
                       <div className="flex items-center space-x-4">
                         <div className={`p-2 rounded-full ${
                           activity.type === 'direct' 
@@ -623,8 +630,8 @@ export default function CreatorDashboard() {
                           )}
                         </div>
                         <div>
-                          <p className="text-white font-medium">{activity.from}</p>
-                          <p className="text-gray-400 text-sm">
+                          <p className="text-slate-900 dark:text-white font-medium">{activity.from}</p>
+                          <p className="text-slate-600 dark:text-slate-300 text-sm">
                             {activity.type === 'pool_reward' && activity.poolId && (
                               <span className="text-yellow-500">Pool: {activity.poolId}</span>
                             )}
@@ -633,8 +640,8 @@ export default function CreatorDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-green-400 font-semibold">+{activity.amount} SHM</p>
-                        <p className="text-gray-400 text-sm">{activity.timestamp}</p>
+                        <p className="text-green-500 font-semibold">+{activity.amount} {TOKEN_SYMBOL}</p>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm">{activity.timestamp}</p>
                       </div>
                     </div>
                   ))}
@@ -645,5 +652,20 @@ export default function CreatorDashboard() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function CreatorDashboard() {
+  return (
+    <ClientOnly fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="text-slate-900 dark:text-white mt-4">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <CreatorDashboardContent />
+    </ClientOnly>
   );
 }

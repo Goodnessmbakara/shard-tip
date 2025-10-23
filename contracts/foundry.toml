@@ -21,9 +21,11 @@ remappings = [
 
 [rpc_endpoints]
 shardeum = "https://api-unstable.shardeum.org"
+sepolia = "https://rpc.sepolia.org"
 
 [etherscan]
 shardeum = { key = "${SHARDEUM_API_KEY}", url = "https://explorer-unstable.shardeum.org/api" }
+sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.etherscan.io/api" }
 
 [fmt]
 line_length = 120

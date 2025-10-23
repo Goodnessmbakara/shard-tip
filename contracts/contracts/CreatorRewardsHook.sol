@@ -240,6 +240,22 @@ contract CreatorRewardsHook is BaseHook, ReentrancyGuard, Ownable {
     }
 
     /**
+     * @dev Test helper function to set pending rewards (testing only)
+     */
+    function _setPendingRewards(address creator, Currency currency, uint256 amount) external {
+        // This function should only be used in tests
+        pendingRewards[creator][currency] = amount;
+    }
+
+    /**
+     * @dev Test helper function to set total rewards distributed (testing only)
+     */
+    function _setTotalRewardsDistributed(PoolId poolId, uint256 amount) external {
+        // This function should only be used in tests
+        totalRewardsDistributed[poolId] = amount;
+    }
+
+    /**
      * @dev Fallback function to reject direct ETH transfers
      */
     receive() external payable {

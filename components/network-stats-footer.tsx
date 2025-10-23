@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Activity, Zap, DollarSign } from "lucide-react"
-import { getShardeumNetworkStats } from "@/lib/shardeum-api"
+import { getNetworkStats } from "@/lib/network-api"
 
 interface FooterStatsData {
   activeNodes: number
@@ -23,7 +23,7 @@ export function NetworkStatsFooter() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const networkStats = await getShardeumNetworkStats()
+        const networkStats = await getNetworkStats()
         setStats({
           activeNodes: networkStats.activeNodes,
           tps: networkStats.tps,
@@ -55,7 +55,7 @@ export function NetworkStatsFooter() {
     {
       icon: <DollarSign className="w-4 h-4 text-accent" />,
       label: "Fee",
-      value: stats.loading ? "..." : `${stats.avgFee} SHM`,
+      value: stats.loading ? "..." : `${stats.avgFee} TIP`,
     },
   ]
 

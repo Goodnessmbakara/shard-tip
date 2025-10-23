@@ -1,36 +1,66 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {CreatorRewardsHook} from "../contracts/CreatorRewardsHook.sol";
-import {CreatorRegistry} from "../contracts/CreatorRegistry.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {Currency} from "v4-core/types/Currency.sol";
-import {BalanceDelta, toBalanceDelta} from "v4-core/types/BalanceDelta.sol";
+import {CurrencyLibrary} from "v4-core/types/Currency.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
+import {TickMath} from "v4-core/libraries/TickMath.sol";
+import {BalanceDelta, toBalanceDelta} from "v4-core/types/BalanceDelta.sol";
 
+/**
+ * @title CreatorRewardsHookTest
+ * @dev Comprehensive test suite for CreatorRewardsHook
+ * @author ShardTip Team
+ */
 contract CreatorRewardsHookTest is Test {
     using PoolIdLibrary for PoolKey;
+    using CurrencyLibrary for Currency;
 
     CreatorRewardsHook public hook;
-    CreatorRegistry public registry;
     IPoolManager public poolManager;
     
-    address public creator = address(0x1);
-    address public swapper = address(0x2);
-    address public owner = address(this);
+    address public creator = makeAddr("creator");
+    address public swapper = makeAddr("swapper");
+    
+    PoolKey public poolKey;
+    PoolId public poolId;
+    
+    Currency public currency0;
+    Currency public currency1;
 
     function setUp() public {
-        // Deploy mock pool manager (in real tests, use actual v4-core)
-        address mockPoolManager = address(0x1234567890123456789012345678901234567890);
-        vm.etch(mockPoolManager, new bytes(1)); // Mock pool manager address
-        poolManager = IPoolManager(mockPoolManager);
+        // Mock PoolManager for testing
+        poolManager = IPoolManager(makeAddr("poolManager"));
         
+        // Deploy hook
         hook = new CreatorRewardsHook(poolManager);
-        registry = new CreatorRegistry();
+        
+        // Setup test currencies
+        currency0 = Currency.wrap(makeAddr("token0"));
+        currency1 = Currency.wrap(makeAddr("token1"));
+        
+        // Setup test pool
+        poolKey = PoolKey({
+            currency0: currency0,
+            currency1: currency1,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(hook)
+        });
+        poolId = poolKey.toId();
+    }
+
+    function testInitialization() public {
+        assertEq(address(hook.poolManager()), address(poolManager));
+        assertEq(hook.owner(), address(this));
+        assertEq(hook.rewardPercentage(), 10); // 0.1%
+        assertFalse(hook.creatorWhitelistEnabled());
     }
 
     function testHookPermissions() public {
@@ -38,163 +68,242 @@ contract CreatorRewardsHookTest is Test {
         
         assertFalse(permissions.beforeInitialize);
         assertTrue(permissions.afterInitialize);
+        assertFalse(permissions.beforeAddLiquidity);
+        assertFalse(permissions.afterAddLiquidity);
+        assertFalse(permissions.beforeRemoveLiquidity);
+        assertFalse(permissions.afterRemoveLiquidity);
         assertFalse(permissions.beforeSwap);
         assertTrue(permissions.afterSwap);
+        assertFalse(permissions.beforeDonate);
+        assertFalse(permissions.afterDonate);
     }
 
     function testPoolCreatorRegistration() public {
-        PoolKey memory key = PoolKey({
-            currency0: Currency.wrap(address(0x3)),
-            currency1: Currency.wrap(address(0x4)),
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: IHooks(address(hook))
-        });
-
-        PoolId poolId = key.toId();
-        
-        // Mock afterInitialize call
-        vm.prank(address(poolManager));
-        hook.afterInitialize(creator, key, 1000000, 0);
+        // Simulate pool initialization
+        vm.prank(creator);
+        hook.afterInitialize(
+            creator,
+            poolKey,
+            0, // sqrtPriceX96
+            0  // tick
+        );
         
         assertEq(hook.poolCreators(poolId), creator);
     }
 
-    function testRewardCalculation() public {
-        // Register creator first
+    function testRewardDistribution() public {
+        // Register creator
         vm.prank(creator);
-        registry.registerCreator(
-            "Test Creator",
-            "A test creator",
-            "https://example.com/avatar.png",
-            "DeFi",
-            new string[](0)
-        );
-
-        // Authorize creator
+        hook.afterInitialize(creator, poolKey, 0, 0);
+        
+        // Authorize creator if whitelist is enabled
         hook.authorizeCreator(creator);
-
-        PoolKey memory key = PoolKey({
-            currency0: Currency.wrap(address(0)),
-            currency1: Currency.wrap(address(0x5)),
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: IHooks(address(hook))
-        });
-
-        PoolId poolId = key.toId();
-
-        // Register pool creator
-        vm.prank(address(poolManager));
-        hook.afterInitialize(creator, key, 1000000, 0);
-
-        // Mock a swap with 1000 ETH input
-        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
-            zeroForOne: true,
-            amountSpecified: 1000 ether,
-            sqrtPriceLimitX96: 0
-        });
-
-        BalanceDelta delta = toBalanceDelta(int128(-1000 ether), int128(900 ether));
-
-        vm.prank(address(poolManager));
-        (bytes4 selector, int128 returnedDelta) = hook.afterSwap(
+        
+        // Simulate swap with 1000 token volume
+        uint256 swapAmount = 1000e18;
+        // For zeroForOne: true, amount0 should be negative (token0 out), amount1 should be positive (token1 in)
+        BalanceDelta delta = toBalanceDelta(int128(-int256(swapAmount)), int128(int256(swapAmount)));
+        
+        vm.prank(swapper);
+        (bytes4 selector, int128 returnDelta) = hook.afterSwap(
             swapper,
-            key,
-            params,
+            poolKey,
+            IPoolManager.SwapParams({
+                zeroForOne: true,
+                amountSpecified: int256(swapAmount),
+                sqrtPriceLimitX96: 0
+            }),
             delta,
             ""
         );
-
+        
+        // Check that hook returns correct selector
         assertEq(selector, hook.afterSwap.selector);
-        assertEq(returnedDelta, 0);
-
-        // Check that creator has pending rewards (0.1% of 1000 ETH = 1 ETH)
-        assertEq(hook.pendingRewards(creator, Currency.wrap(address(0))), 1 ether);
-        assertEq(hook.totalRewardsDistributed(poolId), 1 ether);
+        assertEq(returnDelta, 0);
+        
+        // Check reward calculation (0.1% of 1000 = 1)
+        uint256 expectedReward = (swapAmount * 10) / 10000; // 0.1%
+        assertEq(hook.pendingRewards(creator, currency0), expectedReward);
+        assertEq(hook.totalRewardsDistributed(poolId), expectedReward);
     }
 
-    function testClaimRewards() public {
-        // Setup: creator has pending rewards
-        vm.deal(address(hook), 1 ether);
-        vm.store(address(hook), keccak256(abi.encode(creator, keccak256("pendingRewards"))), bytes32(uint256(1 ether)));
-
-        uint256 initialBalance = creator.balance;
-
+    function testRewardClaiming() public {
+        // Setup: register creator and accumulate rewards
         vm.prank(creator);
-        hook.claimRewards(Currency.wrap(address(0)));
-
-        assertEq(creator.balance, initialBalance + 1 ether);
-        assertEq(hook.pendingRewards(creator, Currency.wrap(address(0))), 0);
+        hook.afterInitialize(creator, poolKey, 0, 0);
+        
+        // Simulate reward accumulation
+        uint256 rewardAmount = 1e18;
+        hook._setPendingRewards(creator, CurrencyLibrary.ADDRESS_ZERO, rewardAmount);
+        
+        // Fund the hook contract
+        vm.deal(address(hook), rewardAmount);
+        
+        uint256 creatorBalanceBefore = creator.balance;
+        
+        // Claim rewards
+        vm.prank(creator);
+        hook.claimRewards(CurrencyLibrary.ADDRESS_ZERO);
+        
+        // Check balances
+        assertEq(creator.balance, creatorBalanceBefore + rewardAmount);
+        assertEq(hook.pendingRewards(creator, CurrencyLibrary.ADDRESS_ZERO), 0);
     }
 
-    function testUnauthorizedCreatorNoRewards() public {
-        // Don't authorize creator
-        PoolKey memory key = PoolKey({
-            currency0: Currency.wrap(address(0)),
-            currency1: Currency.wrap(address(0x5)),
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: IHooks(address(hook))
-        });
+    function testBatchRewardClaiming() public {
+        // Setup: register creator
+        vm.prank(creator);
+        hook.afterInitialize(creator, poolKey, 0, 0);
+        
+        // Setup multiple currencies
+        Currency[] memory currencies = new Currency[](2);
+        currencies[0] = CurrencyLibrary.ADDRESS_ZERO;
+        currencies[1] = currency0;
+        
+        // Fund rewards
+        uint256 rewardAmount = 1e18;
+        hook._setPendingRewards(creator, currencies[0], rewardAmount);
+        hook._setPendingRewards(creator, currencies[1], rewardAmount);
+        
+        vm.deal(address(hook), rewardAmount);
+        
+        uint256 creatorBalanceBefore = creator.balance;
+        
+        // Batch claim
+        vm.prank(creator);
+        hook.claimAllRewards(currencies);
+        
+        // Check ETH reward was claimed
+        assertEq(creator.balance, creatorBalanceBefore + rewardAmount);
+        assertEq(hook.pendingRewards(creator, currencies[0]), 0);
+        // Note: ERC20 claiming would fail in this implementation
+    }
 
-        PoolId poolId = key.toId();
+    function testRewardPercentageUpdate() public {
+        uint256 newPercentage = 50; // 0.5%
+        
+        hook.updateRewardPercentage(newPercentage);
+        assertEq(hook.rewardPercentage(), newPercentage);
+    }
 
-        // Register pool creator
-        vm.prank(address(poolManager));
-        hook.afterInitialize(creator, key, 1000000, 0);
+    function testRewardPercentageUpdateFailsWhenTooHigh() public {
+        uint256 tooHighPercentage = 200; // 2% > 1% max
+        
+        vm.expectRevert("CreatorRewardsHook: Percentage too high");
+        hook.updateRewardPercentage(tooHighPercentage);
+    }
 
+    function testCreatorWhitelist() public {
         // Enable whitelist
         hook.setCreatorWhitelistEnabled(true);
-
-        // Mock a swap
-        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
-            zeroForOne: true,
-            amountSpecified: 1000 ether,
-            sqrtPriceLimitX96: 0
-        });
-
-        BalanceDelta delta = toBalanceDelta(int128(-1000 ether), int128(900 ether));
-
-        vm.prank(address(poolManager));
-        hook.afterSwap(swapper, key, params, delta, "");
-
-        // Creator should have no rewards since not authorized
-        assertEq(hook.pendingRewards(creator, Currency.wrap(address(0))), 0);
+        assertTrue(hook.creatorWhitelistEnabled());
+        
+        // Authorize creator
+        hook.authorizeCreator(creator);
+        assertTrue(hook.authorizedCreators(creator));
+        
+        // Deauthorize creator
+        hook.deauthorizeCreator(creator);
+        assertFalse(hook.authorizedCreators(creator));
     }
 
-    function testUpdateRewardPercentage() public {
-        assertEq(hook.rewardPercentage(), 10); // 0.1%
-
-        hook.updateRewardPercentage(50); // 0.5%
-        assertEq(hook.rewardPercentage(), 50);
-
-        // Should revert if too high
-        vm.expectRevert("CreatorRewardsHook: Percentage too high");
-        hook.updateRewardPercentage(200); // 2%
+    function testGetCreatorStats() public {
+        // Setup creator with rewards
+        hook._setPendingRewards(creator, CurrencyLibrary.ADDRESS_ZERO, 1e18);
+        hook.authorizeCreator(creator);
+        
+        (uint256 totalPendingETH, uint256 totalPendingTokens, bool isAuthorized) = 
+            hook.getCreatorStats(creator);
+        
+        assertEq(totalPendingETH, 1e18);
+        assertEq(totalPendingTokens, 0); // Simplified implementation
+        assertTrue(isAuthorized);
     }
 
-    function testCreatorRegistry() public {
-        string[] memory socialLinks = new string[](2);
-        socialLinks[0] = "https://twitter.com/creator";
-        socialLinks[1] = "https://github.com/creator";
-
+    function testGetPoolStats() public {
+        // Register creator
         vm.prank(creator);
-        registry.registerCreator(
-            "Test Creator",
-            "A test creator description",
-            "https://example.com/avatar.png",
-            "DeFi",
-            socialLinks
+        hook.afterInitialize(creator, poolKey, 0, 0);
+        
+        // Add some rewards
+        hook._setTotalRewardsDistributed(poolId, 5e18);
+        
+        (address poolCreator, uint256 totalRewards, bool hasCreator) = 
+            hook.getPoolStats(poolId);
+        
+        assertEq(poolCreator, creator);
+        assertEq(totalRewards, 5e18);
+        assertTrue(hasCreator);
+    }
+
+    function testEmergencyWithdraw() public {
+        // Fund the hook
+        uint256 emergencyAmount = 1e18;
+        vm.deal(address(hook), emergencyAmount);
+        
+        uint256 ownerBalanceBefore = address(this).balance;
+        
+        // Emergency withdraw
+        hook.emergencyWithdraw(CurrencyLibrary.ADDRESS_ZERO);
+        
+        assertEq(address(this).balance, ownerBalanceBefore + emergencyAmount);
+    }
+
+    // Fallback function to receive ETH
+    receive() external payable {}
+
+    function testRejectDirectTransfers() public {
+        (bool success,) = address(hook).call{value: 1 ether}("");
+        // The call should fail due to the revert in receive()
+        assertFalse(success);
+    }
+
+    function testOnlyOwnerFunctions() public {
+        address nonOwner = makeAddr("nonOwner");
+        
+        vm.startPrank(nonOwner);
+        
+        vm.expectRevert();
+        hook.updateRewardPercentage(20);
+        
+        vm.expectRevert();
+        hook.setCreatorWhitelistEnabled(true);
+        
+        vm.expectRevert();
+        hook.authorizeCreator(creator);
+        
+        vm.expectRevert();
+        hook.emergencyWithdraw(CurrencyLibrary.ADDRESS_ZERO);
+        
+        vm.stopPrank();
+    }
+
+    function testNoRewardsForUnauthorizedCreator() public {
+        // Enable whitelist but don't authorize creator
+        hook.setCreatorWhitelistEnabled(true);
+        
+        // Register creator
+        vm.prank(creator);
+        hook.afterInitialize(creator, poolKey, 0, 0);
+        
+        // Simulate swap
+        uint256 swapAmount = 1000e18;
+        BalanceDelta delta = BalanceDelta.wrap(int128(int256(swapAmount)));
+        
+        vm.prank(swapper);
+        hook.afterSwap(
+            swapper,
+            poolKey,
+            IPoolManager.SwapParams({
+                zeroForOne: true,
+                amountSpecified: int256(swapAmount),
+                sqrtPriceLimitX96: 0
+            }),
+            delta,
+            ""
         );
-
-        assertTrue(registry.isCreator(creator));
-        assertEq(registry.getTotalCreators(), 1);
-
-        CreatorRegistry.CreatorProfile memory profile = registry.getCreatorProfile(creator);
-        assertEq(profile.name, "Test Creator");
-        assertEq(profile.description, "A test creator description");
-        assertEq(profile.category, "DeFi");
-        assertEq(profile.socialLinks.length, 2);
+        
+        // Should not accumulate rewards for unauthorized creator
+        assertEq(hook.pendingRewards(creator, currency0), 0);
     }
 }

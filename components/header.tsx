@@ -43,7 +43,7 @@ export function Header() {
               </Button>
             </Link>
             <Link href="/creator-registration">
-              <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold">
+              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Become Creator
               </Button>

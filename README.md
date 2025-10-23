@@ -25,9 +25,9 @@ A revolutionary DeFi application that brings the creator economy to Uniswap v4 t
 
 | Contract | Address | Status |
 |----------|---------|--------|
-| **ShardTip** | [`0xD963A5d06641C5E3d6f45e4F40c39aD4F81a0A5E`](https://sepolia.etherscan.io/address/0xD963A5d06641C5E3d6f45e4F40c39aD4F81a0A5E) | ✅ Verified |
-| **CreatorRegistry** | [`0x453ac10b6758E1990FBAdF9116216E246Fce6845`](https://sepolia.etherscan.io/address/0x453ac10b6758E1990FBAdF9116216E246Fce6845) | ✅ Verified |
-| **CreatorRewardsHook** | Code Ready | ⏳ Requires CREATE2 |
+| **ShardTip** | [`0xF7936D54CE16CdBC7725091945b36655Cfa74167`](https://sepolia.etherscan.io/address/0xF7936D54CE16CdBC7725091945b36655Cfa74167) | ✅ Verified |
+| **CreatorRegistry** | [`0x41548Ec594CfF2276E2cC805Ab6c1d9A8d7ba764`](https://sepolia.etherscan.io/address/0x41548Ec594CfF2276E2cC805Ab6c1d9A8d7ba764) | ✅ Verified |
+| **CreatorRewardsHook** | [`0x24CADED3B6F0f35180Dc6BdDc6ffB5B3f03EEdf1`](https://sepolia.etherscan.io/address/0x24CADED3B6F0f35180Dc6BdDc6ffB5B3f03EEdf1) | ✅ Verified |
 
 **Uniswap v4 PoolManager**: `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`
 
@@ -151,8 +151,9 @@ cp .env.example .env.local
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_id
 NEXT_PUBLIC_CHAIN_ID=11155111
 NEXT_PUBLIC_NETWORK_NAME=Sepolia
-NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS=0xD963A5d06641C5E3d6f45e4F40c39aD4F81a0A5E
-NEXT_PUBLIC_CREATOR_REGISTRY_ADDRESS=0x453ac10b6758E1990FBAdF9116216E246Fce6845
+NEXT_PUBLIC_SHARDTIP_CONTRACT_ADDRESS=0xF7936D54CE16CdBC7725091945b36655Cfa74167
+NEXT_PUBLIC_CREATOR_REGISTRY_ADDRESS=0x41548Ec594CfF2276E2cC805Ab6c1d9A8d7ba764
+NEXT_PUBLIC_CREATOR_REWARDS_HOOK_ADDRESS=0x24CADED3B6F0f35180Dc6BdDc6ffB5B3f03EEdf1
 NEXT_PUBLIC_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 ```
 
@@ -253,7 +254,7 @@ shard-tip/
 │   ├── test/                    # Foundry tests
 │   └── foundry.toml            # Foundry config
 ├── lib/                         # Utilities and configs
-│   ├── shardeum-api.ts         # Contract interactions
+│   ├── network-api.ts          # Network API interactions
 │   ├── wagmi.ts                # Web3 config
 │   └── utils.ts                # Helpers
 └── docs/                        # Documentation

@@ -1,9 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useRouter } from "next/navigation"
 import { ShardLogo } from "@/components/shard-logo"
+import { HeroIcon } from "@/components/hero-icon"
+import { IconPicker } from "@/components/icon-picker"
 import { NetworkStats } from "@/components/network-stats"
 import { NetworkStatsFooter } from "@/components/network-stats-footer"
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -11,34 +14,63 @@ import { ArrowRight, Sparkles, Coins, Heart, Zap, Shield, Users, Star, TrendingU
 
 export default function HomePage() {
   const router = useRouter()
+  const [selectedIcon, setSelectedIcon] = useState("heart")
   
   return (
     <ErrorBoundary>
+      <IconPicker onIconChange={setSelectedIcon} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        {/* Header */}
-        <header className="border-b border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                <ShardLogo className="w-8 h-8" />
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 border-2 border-blue-500/20 rounded-full"
-                  />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  ShardTip
-                </span>
-              </div>
-              <ConnectButton />
-            </div>
-          </div>
-        </header>
 
         {/* Hero Section */}
         <section className="relative overflow-hidden py-20 lg:py-32">
+          {/* Background Image/Pattern */}
+          <div className="absolute inset-0 -z-20">
+            {/* Base gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900" />
+            
+            {/* Geometric pattern overlay */}
+            <div className="absolute inset-0 opacity-30 dark:opacity-20">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `
+                  radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                  linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.03) 50%, transparent 70%),
+                  linear-gradient(-45deg, transparent 30%, rgba(16, 185, 129, 0.03) 50%, transparent 70%)
+                `,
+                backgroundSize: '400px 400px, 300px 300px, 500px 500px, 200px 200px, 200px 200px',
+                backgroundPosition: '0 0, 100px 100px, 200px 200px, 0 0, 100px 100px'
+              }} />
+            </div>
+            
+            {/* Grid pattern */}
+            <div className="absolute inset-0 opacity-20 dark:opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `
+                  linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: '50px 50px'
+              }} />
+            </div>
+            
+            {/* Floating geometric shapes */}
+            <div className="absolute inset-0">
+              <div className="absolute top-20 left-20 w-32 h-32 border border-blue-300/20 dark:border-blue-400/10 rounded-full" />
+              <div className="absolute top-40 right-32 w-24 h-24 border border-green-300/20 dark:border-green-400/10 rotate-45" />
+              <div className="absolute bottom-32 left-1/3 w-16 h-16 border border-purple-300/20 dark:border-purple-400/10 rounded-full" />
+              <div className="absolute bottom-20 right-20 w-20 h-20 border border-yellow-300/20 dark:border-yellow-400/10 rotate-12" />
+            </div>
+            
+            {/* Subtle noise texture */}
+            <div className="absolute inset-0 opacity-5 dark:opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                backgroundSize: '200px 200px'
+              }} />
+            </div>
+          </div>
+          
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center relative z-10">
               <motion.div
@@ -47,42 +79,20 @@ export default function HomePage() {
                 transition={{ duration: 1, ease: "easeOut" }}
                 className="mb-12"
               >
-                {/* Custom animated logo */}
+                {/* Hero Icon */}
                 <div className="relative inline-block mb-8">
-                  <div className="relative">
-                    <ShardLogo className="w-24 h-24 mx-auto" />
-                    <motion.div
-                      animate={{ 
-                        scale: [1, 1.1, 1],
-                        opacity: [0.3, 0.6, 0.3]
-                      }}
-                      transition={{ 
-                        duration: 3, 
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-xl"
-                    />
-                  </div>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center"
-                  >
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </motion.div>
+                  <HeroIcon variant={selectedIcon as any} className="w-24 h-24 mx-auto" />
                 </div>
 
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
                   <span className="block">Support Creators</span>
-                  <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <span className="block bg-gradient-to-r from-blue-600 via-green-600 to-yellow-600 bg-clip-text text-transparent">
                     Instantly
                   </span>
                 </h1>
                 
                 <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 max-w-4xl mx-auto mb-12 leading-relaxed">
-                  The first micro-tipping platform built on{" "}
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">Shardeum</span>.
+                  The first micro-tipping platform for creators.
                   <br />
                   Send tips in seconds, not minutes. Pay pennies, not dollars.
                 </p>
@@ -101,18 +111,33 @@ export default function HomePage() {
 
                     if (connected) {
                       return (
-                        <button
-                          onClick={() => router.push('/dashboard')}
-                          className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 overflow-hidden"
-                        >
-                          <motion.div
-                            animate={{ x: [0, 100, 0] }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          />
-                          <span className="relative z-10">Go to Dashboard</span>
-                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <button
+                            onClick={() => router.push('/creators')}
+                            className="group relative bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 overflow-hidden"
+                          >
+                            <motion.div
+                              animate={{ x: [0, 100, 0] }}
+                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            />
+                            <span className="relative z-10">Browse Creators</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                          </button>
+                          
+                          <button
+                            onClick={() => router.push('/dashboard')}
+                            className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 overflow-hidden"
+                          >
+                            <motion.div
+                              animate={{ x: [0, 100, 0] }}
+                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            />
+                            <span className="relative z-10">Creator Dashboard</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                          </button>
+                        </div>
                       )
                     }
 
@@ -120,7 +145,7 @@ export default function HomePage() {
                       <button
                         onClick={openConnectModal}
                         disabled={!ready}
-                        className="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 overflow-hidden"
+                        className="group relative bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 overflow-hidden"
                       >
                         <motion.div
                           animate={{ x: [0, 100, 0] }}
@@ -161,23 +186,23 @@ export default function HomePage() {
                 x: [0, 10, 0]
               }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"
+              className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-400/15 to-green-400/15 rounded-full blur-2xl"
             />
-            <motion.div
-              animate={{ 
-                y: [0, 20, 0],
-                x: [0, -15, 0]
-              }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-40 right-20 w-40 h-40 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"
-            />
+              <motion.div
+                animate={{ 
+                  y: [0, 20, 0],
+                  x: [0, -15, 0]
+                }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-40 right-20 w-40 h-40 bg-gradient-to-r from-green-400/15 to-blue-400/15 rounded-full blur-3xl"
+              />
             <motion.div
               animate={{ 
                 scale: [1, 1.2, 1],
                 rotate: [0, 180, 360]
               }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute bottom-20 left-1/4 w-24 h-24 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-full blur-xl"
+              className="absolute bottom-20 left-1/4 w-24 h-24 bg-gradient-to-r from-yellow-400/15 to-orange-400/15 rounded-full blur-xl"
             />
           </div>
         </section>
@@ -203,7 +228,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 className="text-center"
               >
-                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">&lt;1s</div>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">&lt;1s</div>
                 <div className="text-sm text-slate-600 dark:text-slate-300">Transaction Time</div>
               </motion.div>
               <motion.div
@@ -308,17 +333,17 @@ export default function HomePage() {
               >
                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 h-full transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-slate-200 dark:border-slate-700">
                   <div className="relative mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                       <Heart className="w-8 h-8 text-white" />
                     </div>
-                    <motion.div
-                      animate={{ 
-                        scale: [1, 1.3, 1],
-                        opacity: [0.5, 1, 0.5]
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full"
-                    />
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  opacity: [0.5, 1, 0.5]
+                }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
+              />
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Creator First</h3>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -331,7 +356,7 @@ export default function HomePage() {
         </section>
 
         {/* How It Works Section */}
-        <section className="py-24 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-700">
+        <section className="py-24 bg-gradient-to-r from-blue-50 to-green-50 dark:from-slate-800 dark:to-slate-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -368,7 +393,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Connect Wallet</h3>
                 <p className="text-slate-600 dark:text-slate-300">
-                  Connect your Web3 wallet and add some SHM tokens from the Shardeum faucet
+                  Connect your Web3 wallet and add some tokens from the network faucet
                 </p>
               </motion.div>
 
@@ -380,13 +405,13 @@ export default function HomePage() {
                 className="text-center relative"
               >
                 <div className="relative mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold text-white mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold text-white mb-4">
                     2
                   </div>
                   <motion.div
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute inset-0 border-2 border-purple-300 rounded-full"
+                    className="absolute inset-0 border-2 border-green-300 rounded-full"
                   />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Find Creators</h3>
@@ -403,7 +428,7 @@ export default function HomePage() {
                 className="text-center relative"
               >
                 <div className="relative mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold text-white mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto text-2xl font-bold text-white mb-4">
                     3
                   </div>
                   <motion.div
@@ -412,7 +437,7 @@ export default function HomePage() {
                       opacity: [0.5, 1, 0.5]
                     }}
                     transition={{ duration: 1.5, repeat: Infinity }}
-                    className="absolute inset-0 border-2 border-pink-300 rounded-full"
+                    className="absolute inset-0 border-2 border-yellow-300 rounded-full"
                   />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Send Tip</h3>
@@ -435,33 +460,33 @@ export default function HomePage() {
                 viewport={{ once: true }}
               >
                 <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-8">
-                  Powered by Shardeum
+                  Built for Creators
                 </h2>
                 <p className="text-xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed">
-                  The world's first EVM-based L1 blockchain that scales linearly with every node. 
-                  Perfect for micro-transactions and creator payments.
+                  A platform designed specifically for the creator economy. 
+                  Fast, affordable, and built with creators in mind.
                 </p>
                 
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4">
-                    <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+                    <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-green-500 rounded-full" />
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Linear Scalability</h3>
-                      <p className="text-slate-600 dark:text-slate-300">Gets faster with every node added</p>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Lightning Fast</h3>
+                      <p className="text-slate-600 dark:text-slate-300">Instant transactions and real-time updates</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="w-3 h-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" />
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Stable Low Fees</h3>
-                      <p className="text-slate-600 dark:text-slate-300">Consistent pricing regardless of network load</p>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Low Fees</h3>
+                      <p className="text-slate-600 dark:text-slate-300">Minimal transaction costs for maximum creator revenue</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
+                    <div className="w-3 h-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full" />
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">EVM Compatible</h3>
-                      <p className="text-slate-600 dark:text-slate-300">Works with all your favorite wallets and tools</p>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Creator Focused</h3>
+                      <p className="text-slate-600 dark:text-slate-300">Built specifically for creator economy needs</p>
                     </div>
                   </div>
                 </div>
@@ -480,7 +505,7 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
+        <section className="py-24 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm relative overflow-hidden">
           <motion.div
             animate={{ 
               rotate: 360,
@@ -508,10 +533,10 @@ export default function HomePage() {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-8">
+              <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-8">
                 Ready to Support Creators?
               </h2>
-              <p className="text-xl text-blue-100 mb-12 max-w-2xl mx-auto">
+              <p className="text-xl text-slate-600 dark:text-slate-300 mb-12 max-w-2xl mx-auto">
                 Join thousands of creators and supporters using ShardTip to build a better creator economy
               </p>
               <ConnectButton.Custom>
@@ -519,11 +544,33 @@ export default function HomePage() {
                   const ready = mounted
                   const connected = ready && account && chain
 
+                  if (connected) {
+                    return (
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <button
+                          onClick={() => router.push('/creators')}
+                          className="group bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3"
+                        >
+                          <span>Browse Creators</span>
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                        
+                        <button
+                          onClick={() => router.push('/dashboard')}
+                          className="group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3"
+                        >
+                          <span>Creator Dashboard</span>
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </div>
+                    )
+                  }
+
                   return (
                     <button
                       onClick={openConnectModal}
                       disabled={!ready}
-                      className="group bg-white hover:bg-gray-100 text-blue-600 px-12 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 mx-auto"
+                      className="group bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-12 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 mx-auto"
                     >
                       <span>Connect Wallet & Start</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -543,12 +590,12 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row justify-between items-center w-full">
                 <div className="flex items-center space-x-3 mb-4 md:mb-0">
                   <ShardLogo className="w-6 h-6" />
-                  <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                     ShardTip
                   </span>
                 </div>
                 <div className="text-sm text-slate-600 dark:text-slate-300">
-                  Built on Shardeum • Powered by the creator economy
+                  Powered by the creator economy
                 </div>
               </div>
             </div>

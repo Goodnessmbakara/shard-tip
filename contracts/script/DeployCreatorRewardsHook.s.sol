@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 import {CreatorRewardsHook} from "../contracts/CreatorRewardsHook.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {console2} from "forge-std/console2.sol";
 
+/**
+ * @title DeployCreatorRewardsHook
+ * @dev Deployment script for CreatorRewardsHook with CREATE2
+ * @author ShardTip Team
+ */
 contract DeployCreatorRewardsHook is Script {
-    // Uniswap v4 PoolManager addresses
-    address constant SEPOLIA_POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
-    address constant MAINNET_POOL_MANAGER = 0x000000000004444c5dc75cB358380D2e3dE08A90;
-    address constant POLYGON_QUOTER = 0xb3d5c3Dfc3a7aEbFF71895A7191796BFFc2c81b9;
+    // Sepolia PoolManager address
+    address constant POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
     
-    // Note: For Polygon, we'll need to find the PoolManager address
-    // The Quoter address is available, but PoolManager might need to be deployed or found
+    // CREATE2 salt for deterministic deployment
+    bytes32 constant SALT = keccak256("ShardTip-CreatorRewardsHook-v1");
     
-    function run() external returns (CreatorRewardsHook) {
+    function run() external {
         // Try to get private key with 0x prefix, fallback to without
         uint256 deployerPrivateKey;
         try vm.envUint("PRIVATE_KEY") returns (uint256 key) {
@@ -24,24 +26,51 @@ contract DeployCreatorRewardsHook is Script {
             string memory pkString = vm.envString("PRIVATE_KEY");
             deployerPrivateKey = vm.parseUint(string.concat("0x", pkString));
         }
+        address deployer = vm.addr(deployerPrivateKey);
         
-        // Get PoolManager address - use Sepolia by default, or from env
-        address poolManagerAddress = vm.envOr("POOL_MANAGER_ADDRESS", SEPOLIA_POOL_MANAGER);
-        
-        console2.log("Deploying CreatorRewardsHook...");
-        console2.log("Using PoolManager at:", poolManagerAddress);
+        console.log("Deploying CreatorRewardsHook...");
+        console.log("Deployer:", deployer);
+        console.log("PoolManager:", POOL_MANAGER);
         
         vm.startBroadcast(deployerPrivateKey);
         
-        IPoolManager poolManager = IPoolManager(poolManagerAddress);
-        CreatorRewardsHook hook = new CreatorRewardsHook(poolManager);
+        // Deploy with CREATE2 for deterministic address
+        bytes memory bytecode = abi.encodePacked(
+            type(CreatorRewardsHook).creationCode,
+            abi.encode(IPoolManager(POOL_MANAGER))
+        );
         
-        console2.log("CreatorRewardsHook deployed at:", address(hook));
-        console2.log("Using PoolManager at:", poolManagerAddress);
+        address hookAddress;
+        bytes32 salt = SALT;
+        assembly {
+            hookAddress := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+        }
+        
+        require(hookAddress != address(0), "CreatorRewardsHook: Deployment failed");
         
         vm.stopBroadcast();
         
-        return hook;
+        console.log("CreatorRewardsHook deployed at:", hookAddress);
+        console.log("Salt used:", vm.toString(SALT));
+        
+        // Verify deployment
+        CreatorRewardsHook hook = CreatorRewardsHook(payable(hookAddress));
+        console.log("Hook owner:", hook.owner());
+        console.log("Reward percentage:", hook.rewardPercentage());
+        console.log("Creator whitelist enabled:", hook.creatorWhitelistEnabled());
+        
+        // Save deployment info
+        string memory deploymentInfo = string(abi.encodePacked(
+            "CreatorRewardsHook Deployment Info:\n",
+            "Address: ", vm.toString(hookAddress), "\n",
+            "PoolManager: ", vm.toString(POOL_MANAGER), "\n",
+            "Salt: ", vm.toString(SALT), "\n",
+            "Deployer: ", vm.toString(deployer), "\n",
+            "Block: ", vm.toString(block.number), "\n",
+            "Timestamp: ", vm.toString(block.timestamp)
+        ));
+        
+        vm.writeFile("deployment-info.txt", deploymentInfo);
+        console.log("Deployment info saved to deployment-info.txt");
     }
 }
-

@@ -1,31 +1,10 @@
 import { createConfig, http } from "wagmi"
 import { defineChain } from "viem"
-
-export const shardeumTestnet = defineChain({
-  id: 8080,
-  name: "Shardeum Unstablenet",
-  nativeCurrency: {
-    decimals: 18,
-    name: "Shardeum",
-    symbol: "SHM",
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://api-unstable.shardeum.org"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Shardeum Explorer",
-      url: "https://explorer-unstable.shardeum.org",
-    },
-  },
-  testnet: true,
-})
+import { sepolia } from "viem/chains"
 
 export const config = createConfig({
-  chains: [shardeumTestnet],
+  chains: [sepolia],
   transports: {
-    [shardeumTestnet.id]: http(),
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_RPC_URL || "https://eth-sepolia.g.alchemy.com/v2/Is8yBI6q-15CZYr4ySEfU0xnh6b-X2sz"),
   },
 })

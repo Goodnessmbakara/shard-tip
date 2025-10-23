@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Activity, Zap, DollarSign, Globe, Clock, TrendingUp } from "lucide-react"
-import { getShardeumNetworkStats } from "@/lib/shardeum-api"
+import { getNetworkStats } from "@/lib/network-api"
 
 interface NetworkStatsData {
   activeNodes: number
@@ -28,7 +28,7 @@ export function NetworkStats() {
 
   const fetchStats = async () => {
     try {
-      const networkStats = await getShardeumNetworkStats()
+      const networkStats = await getNetworkStats()
       setStats({
         activeNodes: networkStats.activeNodes,
         tps: networkStats.tps,
@@ -71,14 +71,14 @@ export function NetworkStats() {
       icon: <DollarSign className="w-6 h-6 text-accent" />,
       label: "Avg Fee",
       value: stats.loading ? "..." : stats.avgFee,
-      suffix: " SHM",
+      suffix: " TIP",
       description: "Average transaction fee",
     },
     {
       icon: <Globe className="w-6 h-6 text-primary" />,
       label: "Gas Price",
       value: stats.loading ? "..." : stats.gasPrice,
-      suffix: " SHM",
+      suffix: " TIP",
       description: "Current gas price per unit",
     },
   ]
@@ -125,7 +125,7 @@ export function NetworkStats() {
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
-            <span className="text-muted-foreground">Shardeum Unstablenet</span>
+            <span className="text-muted-foreground">Creator Network</span>
           </div>
           <div className="flex items-center space-x-4 text-muted-foreground">
             <div className="flex items-center space-x-1">

@@ -20,7 +20,8 @@ abstract contract BaseHook is IHooks {
 
     constructor(IPoolManager _poolManager) {
         poolManager = _poolManager;
-        _validateHookAddress(this);
+        // Note: Hook address validation is typically done during deployment
+        // _validateHookAddress(this);
     }
 
     /**

@@ -166,18 +166,18 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-2xl"
       >
-        <Card className="bg-gray-800/50 border-gray-700">
+        <Card className="bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-white">
+            <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
               Become a Creator
             </CardTitle>
-            <p className="text-gray-400">
+            <p className="text-slate-600 dark:text-slate-300">
               Join the ShardTip creator community and start earning from your contributions
             </p>
           </CardHeader>
@@ -195,9 +195,9 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                     <div key={stepItem.number} className="flex items-center">
                       <div className={`
                         flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all
-                        ${isActive ? 'border-yellow-500 bg-yellow-500 text-black' : 
+                        ${isActive ? 'border-blue-500 bg-gradient-to-r from-blue-500 to-green-500 text-white' : 
                           isCompleted ? 'border-green-500 bg-green-500 text-white' : 
-                          'border-gray-600 text-gray-400'}
+                          'border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500'}
                       `}>
                         {isCompleted ? (
                           <CheckCircle className="w-5 h-5" />
@@ -206,15 +206,15 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                         )}
                       </div>
                       <span className={`ml-2 text-sm font-medium ${
-                        isActive ? 'text-yellow-500' : 
+                        isActive ? 'text-blue-600 dark:text-blue-400' : 
                         isCompleted ? 'text-green-500' : 
-                        'text-gray-400'
+                        'text-slate-400 dark:text-slate-500'
                       }`}>
                         {stepItem.title}
                       </span>
                       {index < steps.length - 1 && (
                         <div className={`w-8 h-0.5 mx-4 ${
-                          step > stepItem.number ? 'bg-green-500' : 'bg-gray-600'
+                          step > stepItem.number ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
                         }`} />
                       )}
                     </div>
@@ -235,15 +235,15 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                 {step === 1 && (
                   <div className="space-y-6">
                     <div>
-                      <Label className="text-white font-medium">Display Name *</Label>
+                      <Label className="text-slate-900 dark:text-white font-medium">Display Name *</Label>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Your creator name"
-                        className="bg-gray-700 border-gray-600 text-white mt-2"
+                        className="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white mt-2"
                       />
                       {errors.name && (
-                        <p className="text-red-400 text-sm mt-1 flex items-center">
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
                           <AlertCircle className="w-4 h-4 mr-1" />
                           {errors.name}
                         </p>
@@ -407,7 +407,7 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                   <Button
                     onClick={handlePrevious}
                     variant="outline"
-                    className="border-gray-600 text-gray-300"
+                    className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
                   >
                     Previous
                   </Button>
@@ -419,7 +419,7 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                   <Button
                     onClick={onCancel}
                     variant="outline"
-                    className="border-gray-600 text-gray-300"
+                    className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
                   >
                     Cancel
                   </Button>
@@ -428,7 +428,7 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                 {step < 3 ? (
                   <Button
                     onClick={handleNext}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
+                    className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold"
                   >
                     Next
                   </Button>
@@ -436,7 +436,7 @@ export default function CreatorRegistration({ onSuccess, onCancel }: CreatorRegi
                   <Button
                     onClick={handleSubmit}
                     disabled={uploading}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
+                    className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold"
                   >
                     {uploading ? 'Registering...' : 'Complete Registration'}
                   </Button>
