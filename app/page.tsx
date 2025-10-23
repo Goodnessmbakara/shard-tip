@@ -118,7 +118,7 @@ export default function HomePage() {
                           >
                             <motion.div
                               animate={{ x: [0, 100, 0] }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                             />
                             <span className="relative z-10">Browse Creators</span>
@@ -131,7 +131,7 @@ export default function HomePage() {
                           >
                             <motion.div
                               animate={{ x: [0, 100, 0] }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                             />
                             <span className="relative z-10">Creator Dashboard</span>
@@ -288,7 +288,7 @@ export default function HomePage() {
                     </div>
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                       className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
                     />
                   </div>

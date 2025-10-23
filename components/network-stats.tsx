@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, memo } from "react"
 import { motion } from "framer-motion"
 import { Activity, Zap, DollarSign, Globe, Clock, TrendingUp } from "lucide-react"
 import { getNetworkStats } from "@/lib/network-api"
@@ -15,7 +15,7 @@ interface NetworkStatsData {
   lastUpdated: Date | null
 }
 
-export function NetworkStats() {
+export const NetworkStats = memo(function NetworkStats() {
   const [stats, setStats] = useState<NetworkStatsData>({
     activeNodes: 0,
     tps: 0,
@@ -47,8 +47,8 @@ export function NetworkStats() {
   useEffect(() => {
     fetchStats()
 
-    // Refresh stats every 30 seconds
-    const interval = setInterval(fetchStats, 30000)
+    // Refresh stats every 5 minutes (reduced from 30 seconds)
+    const interval = setInterval(fetchStats, 300000)
     return () => clearInterval(interval)
   }, [])
 
@@ -138,4 +138,4 @@ export function NetworkStats() {
       </div>
     </div>
   )
-}
+})

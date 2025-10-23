@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { 
   getAllCreators, 
@@ -46,6 +46,9 @@ export function useSmartContract() {
   const [creatorPoolStats, setCreatorPoolStats] = useState<CreatorPoolStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Debounce refs to prevent excessive API calls
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch all creators from smart contract
   const fetchCreators = async () => {
@@ -65,23 +68,31 @@ export function useSmartContract() {
     }
   };
 
-  // Fetch platform statistics
-  const fetchPlatformStats = async () => {
-    try {
-      const [totalCreators, totalTipsSent] = await Promise.all([
-        getTotalCreators(),
-        getTotalTipsSent(),
-      ]);
-
-      setPlatformStats({
-        totalCreators,
-        totalTipsSent,
-        totalActivePools: 0, // TODO: Implement pool counting
-      });
-    } catch (err) {
-      console.error('Failed to fetch platform stats:', err);
+  // Fetch platform statistics with debouncing
+  const fetchPlatformStats = useCallback(async () => {
+    // Clear existing timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
     }
-  };
+    
+    // Set new timeout to debounce calls
+    fetchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const [totalCreators, totalTipsSent] = await Promise.all([
+          getTotalCreators(),
+          getTotalTipsSent(),
+        ]);
+
+        setPlatformStats({
+          totalCreators,
+          totalTipsSent,
+          totalActivePools: 0, // TODO: Implement pool counting
+        });
+      } catch (err) {
+        console.error('Failed to fetch platform stats:', err);
+      }
+    }, 1000); // 1 second debounce
+  }, []);
 
   // Send tip to creator
   const sendTip = async (creatorAddress: string, amount: number, privateKey: string) => {
@@ -227,10 +238,10 @@ export function useSmartContract() {
 
     fetchData();
 
-    // Set up periodic refresh (every 30 seconds)
+    // Set up periodic refresh (every 5 minutes)
     const interval = setInterval(() => {
       fetchPlatformStats();
-    }, 30000);
+    }, 300000);
 
     return () => clearInterval(interval);
   }, []);

@@ -37,7 +37,7 @@ export function NetworkStatsFooter() {
     }
 
     fetchStats()
-    const interval = setInterval(fetchStats, 60000) // Update every minute for footer
+    const interval = setInterval(fetchStats, 300000) // Update every 5 minutes for footer
     return () => clearInterval(interval)
   }, [])
 

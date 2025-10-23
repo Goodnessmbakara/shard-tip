@@ -9,6 +9,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Performance optimizations
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+  },
+  // Reduce bundle size
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Fix for server-side rendering issues with WalletConnect

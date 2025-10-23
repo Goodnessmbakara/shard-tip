@@ -140,7 +140,7 @@ function CreatorDashboardContent() {
     fetchLiveData();
     
     // Set up periodic refresh (every 30 seconds)
-    const interval = setInterval(fetchLiveData, 30000);
+    const interval = setInterval(fetchLiveData, 300000); // 5 minutes instead of 30 seconds
     
     return () => clearInterval(interval);
   }, [platformStats, creatorPools, creatorPoolStats, address]);
