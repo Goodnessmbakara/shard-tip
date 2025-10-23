@@ -1,8 +1,8 @@
 import { createPublicClient, createWalletClient, http, parseEther, formatEther } from 'viem';
 import { sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
-import ShardTipABI from './contracts/ShardTip.json';
-import CreatorRegistryABI from './contracts/CreatorRegistry.json';
+import ShardTipABI from './contracts/ShardTip.json' assert { type: 'json' };
+import CreatorRegistryABI from './contracts/CreatorRegistry.json' assert { type: 'json' };
 
 // Contract addresses from deployment
 const SHARD_TIP_ADDRESS = '0xF7936D54CE16CdBC7725091945b36655Cfa74167';
@@ -58,26 +58,38 @@ export async function getAllCreators(): Promise<Creator[]> {
   try {
     console.log('Fetching all creators from smart contract...');
     
-    // Get all creator addresses
-    const creatorAddresses = await publicClient.readContract({
+    // First get the total number of creators
+    const totalCreators = await publicClient.readContract({
       address: CREATOR_REGISTRY_ADDRESS as `0x${string}`,
       abi: CreatorRegistryABI,
-      functionName: 'getAllCreators',
-    }) as string[];
+      functionName: 'getTotalCreators',
+    }) as bigint;
 
-    console.log(`Found ${creatorAddresses.length} creators`);
+    const totalCount = Number(totalCreators);
+    console.log(`Found ${totalCount} total creators`);
 
-    // Get creator details for each address
+    if (totalCount === 0) {
+      return [];
+    }
+
+    // Get all creators using pagination (fetch all at once since we know the total)
+    const result = await publicClient.readContract({
+      address: CREATOR_REGISTRY_ADDRESS as `0x${string}`,
+      abi: CreatorRegistryABI,
+      functionName: 'getCreators',
+      args: [0, totalCount], // offset: 0, limit: totalCount
+    }) as [string[], any[]];
+
+    const [creatorAddresses, creatorProfiles] = result;
+    console.log(`Retrieved ${creatorAddresses.length} creators with profiles`);
+
+    // Process creator data
     const creators: Creator[] = [];
     
-    for (const address of creatorAddresses) {
+    for (let i = 0; i < creatorAddresses.length; i++) {
       try {
-        const creatorData = await publicClient.readContract({
-          address: CREATOR_REGISTRY_ADDRESS as `0x${string}`,
-          abi: CreatorRegistryABI,
-          functionName: 'getCreator',
-          args: [address as `0x${string}`],
-        }) as any;
+        const address = creatorAddresses[i];
+        const creatorData = creatorProfiles[i];
 
         // Get tips received for this creator
         const tipsReceived = await getCreatorTipsReceived(address);
@@ -90,16 +102,16 @@ export async function getAllCreators(): Promise<Creator[]> {
           category: creatorData.category,
           socialLinks: creatorData.socialLinks,
           isActive: creatorData.isActive,
-          registrationTime: Number(creatorData.registrationTime),
+          registrationTime: Number(creatorData.registrationTimestamp),
           totalTipsReceived: tipsReceived.toString(),
-          totalPoolsCreated: 0, // TODO: Implement pool counting
+          totalPoolsCreated: Number(creatorData.totalPoolsCreated),
         });
       } catch (error) {
-        console.error(`Error fetching creator ${address}:`, error);
+        console.error(`Error processing creator ${creatorAddresses[i]}:`, error);
       }
     }
 
-    console.log(`Successfully fetched ${creators.length} creators`);
+    console.log(`Successfully processed ${creators.length} creators`);
     return creators;
   } catch (error) {
     console.error('Failed to fetch creators from smart contract:', error);
@@ -114,13 +126,14 @@ export async function getTotalTipsSent(): Promise<number> {
   try {
     console.log('Fetching total tips sent from smart contract...');
     
-    const totalTips = await publicClient.readContract({
+    const platformStats = await publicClient.readContract({
       address: SHARD_TIP_ADDRESS as `0x${string}`,
       abi: ShardTipABI,
-      functionName: 'getTotalTipsDistributed',
-    }) as bigint;
+      functionName: 'getPlatformStats',
+    }) as [bigint, bigint, bigint];
 
-    const totalTipsFormatted = Number(formatEther(totalTips));
+    const [totalTipsVolume, totalTransactions, totalPlatformFees] = platformStats;
+    const totalTipsFormatted = Number(formatEther(totalTipsVolume));
     console.log(`Total tips sent: ${totalTipsFormatted}`);
     return totalTipsFormatted;
   } catch (error) {
